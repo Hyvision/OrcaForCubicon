@@ -49,3 +49,7 @@ internal_docs/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# OrcaForCubicon build/packaging outputs
+/dist/
+installer/windows/redist/vc_redist.x64.exe

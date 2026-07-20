@@ -1,0 +1,17 @@
+파일 복사
+
+------------------
+nsProcess.dll
+nsProcessW.dll
+--------------------
+
+profgram files\nsis\plugin 폴더로 복사
+
+----------------
+nsProcess.nsh
+FontReg.nsh
+FontName.nsh
+---------------
+
+profgram files\nsis\include 폴더로 복사
+
