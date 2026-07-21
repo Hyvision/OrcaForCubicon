@@ -1,4 +1,4 @@
-# apply_overlay.ps1 — Cubicon 오버레이를 업스트림 트리에 적용 (Windows/PowerShell)
+﻿# apply_overlay.ps1 — Cubicon 오버레이를 업스트림 트리에 적용 (Windows/PowerShell)
 # 1) cubicon/patches/*.patch 를 순서대로 git apply --3way
 # 2) cubicon/resources/* 를 업스트림 resources/ 위로 덮어쓰기 복사
 # 사용: pwsh cubicon/scripts/apply_overlay.ps1  (repo 루트에서 실행)

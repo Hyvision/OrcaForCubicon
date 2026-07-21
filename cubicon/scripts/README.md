@@ -9,20 +9,25 @@
 
 ## 한 줄 빌드 (git 업데이트 후)
 
+플래그 없이 실행하면 **대화형**으로 옵션을 순서대로 물어본다(엔터=기본값, 번호로 선택).
+플래그를 주면 해당 항목의 기본값이 바뀌고, `-y`(win: `-y`/`-NonInteractive`)면 질문 없이 바로 진행한다.
+
 ```powershell
-# Windows — 앱 빌드 + 인스톨러까지 한 번에
+# Windows — 실행하면 순서대로: ① Clean? ② deps 재빌드? ③ 인스톨러 생성? → 요약 확인 → 진행
 pwsh cubicon/scripts/build_win.ps1
 #   -Clean        build/ 정리 후 새로 빌드
 #   -Deps         의존성 강제 재빌드 (기본: 있으면 재사용)
 #   -SkipPackage  인스톨러 없이 앱만
+#   -y            질문 없이 비대화형(플래그/기본값) 진행
 ```
 ```bash
-# macOS — 앱 빌드 + DMG까지 한 번에 (arm64 기본)
+# macOS — 실행하면 순서대로: ① 아키텍처 ② Clean? ③ deps 재빌드? ④ DMG 생성? → 요약 확인 → 진행
 bash cubicon/scripts/build_mac.sh
-#   -a x86_64|universal   아키텍처
+#   -a x86_64|universal   아키텍처 (기본 arm64)
 #   -c                    build/<arch> 정리 후 새로 빌드
 #   -D                    의존성 강제 재빌드
 #   -P                    DMG 없이 앱만
+#   -y                    질문 없이 비대화형 진행
 ```
 
 산출물:

@@ -1,4 +1,4 @@
-# package_win.ps1 — build the OrcaForCubicon Windows installer (NSIS) from the
+﻿# package_win.ps1 — build the OrcaForCubicon Windows installer (NSIS) from the
 # CMake install output. Assumes the app is already built + installed
 # (build/OrcaSlicer exists). Run build_win.ps1 first for a full pipeline.
 param(
