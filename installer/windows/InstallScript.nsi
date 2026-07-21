@@ -9,7 +9,7 @@
 ;   /DLICENSE_FILE=<file>    license shown on the license page
 
 !define PRODUCT_NAME "OrcaForCubicon"
-!define APP_EXE "orca-slicer.exe"
+!define APP_EXE "OrcaForCubicon.exe"
 
 !ifndef STAGE_DIR
   !define STAGE_DIR "..\..\build\OrcaSlicer"

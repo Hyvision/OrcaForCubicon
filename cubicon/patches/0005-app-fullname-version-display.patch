@@ -12,22 +12,21 @@ index f4291d36df..3cead21ee0 100644
  #define GCODEVIEWER_APP_KEY  "OrcaSlicerGcodeViewer"
  #define GCODEVIEWER_BUILD_ID std::string("OrcaSlicer G-code Viewer-") + std::string(SLIC3R_VERSION) + std::string("-RC")
 diff --git a/src/slic3r/GUI/GUI_App.cpp b/src/slic3r/GUI/GUI_App.cpp
-index 5673304607..4ed36d4819 100644
+index 5673304607..a77f40daab 100644
 --- a/src/slic3r/GUI/GUI_App.cpp
 +++ b/src/slic3r/GUI/GUI_App.cpp
-@@ -2872,7 +2872,10 @@ bool GUI_App::on_init_inner()
+@@ -2872,7 +2872,9 @@ bool GUI_App::on_init_inner()
  
      // Orca: use wxWeakRef to provent wild pointer.
      wxWeakRef<SplashScreen> scrn = nullptr;
 -    if (app_config->get("show_splash_screen") == "true") {
-+    // Cubicon: show the splash by default, including the very first launch. On first run no config
-+    // file exists yet, so AppConfig::set_defaults (which would set show_splash_screen=true) has not
-+    // run and get() returns empty; treat anything other than an explicit "false" as enabled.
-+    if (app_config->get("show_splash_screen") != "false") {
++    // Cubicon: always show the splash screen (branding), regardless of the show_splash_screen
++    // setting or a value inherited from an older config. Users cannot turn it off.
++    if (true) {
          // Detect position (display) to show the splash screen
          // Now this position is equal to the mainframe position
          wxPoint splashscreen_pos = wxDefaultPosition;
-@@ -6020,7 +6023,10 @@ std::string GUI_App::format_display_version()
+@@ -6020,7 +6022,10 @@ std::string GUI_App::format_display_version()
  {
      if (!version_display.empty()) return version_display;
  
@@ -39,7 +38,7 @@ index 5673304607..4ed36d4819 100644
      return version_display;
  }
  
-@@ -7514,6 +7520,14 @@ bool GUI_App::load_language(wxString language, bool initial)
+@@ -7514,6 +7519,14 @@ bool GUI_App::load_language(wxString language, bool initial)
  	    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(from_u8(localization_dir()));
      	// Get the active language from PrusaSlicer.ini, or empty string if the key does not exist.
          language = app_config->get("language");
