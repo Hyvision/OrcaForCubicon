@@ -1,2 +1,7 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
+
+# Cubicon overlay: keep patches and shell scripts LF-only so `git apply` (apply_overlay)
+# and bash (build_mac.sh/package_mac.sh) work regardless of the checkout platform / autocrlf.
+*.patch text eol=lf
+*.sh    text eol=lf

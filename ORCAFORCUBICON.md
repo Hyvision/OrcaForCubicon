@@ -18,12 +18,14 @@
 | 인스톨러 | `installer/` | 패키징 스크립트 |
 
 ## 진행 단계
-- [x] Phase 1 — 통합 repo 스캐폴딩 (본 커밋)
-- [ ] Phase 2 — 브랜딩·버전 오버레이
-- [ ] Phase 3 — Cubicon 프로파일 이식
-- [ ] Phase 4 — 소스 패치 재적용
-- [ ] Phase 5 — Windows 패키징(NSIS)
-- [ ] Phase 6 — macOS 빌드·DMG
+- [x] Phase 1 — 통합 repo 스캐폴딩
+- [x] Phase 2 — 브랜딩·버전 오버레이 (제품명/About/스플래시에 OrcaForCubicon + 버전 표기)
+- [x] Phase 3 — Cubicon 프로파일 이식 (xCeler-I/Plus/Mini)
+- [x] Phase 4 — 소스 패치 재적용 (`0001`~`0005`: 브랜딩·마우스·About·**per-filament 첫레이어 override**·앱 풀네임/버전표시)
+- [x] Phase 5 — Windows 패키징(NSIS, 사전 릴리스 버전 표기 대응)
+- [~] Phase 6 — macOS 빌드·DMG — **스크립트+문서 준비 완료**(`cubicon/scripts/build_mac.sh`·`package_mac.sh`, [`cubicon/doc/BUILD_MACOS.md`](cubicon/doc/BUILD_MACOS.md)); Mac PC에서 빌드·검증 대기
+
+현재 버전 SSOT: `cubicon/version/cubicon_version.txt` = **1.5.0-rc1** (통합 빌드 첫 사전 릴리스).
 
 ## 업스트림 업데이트(리베이스)
 ```

@@ -1,0 +1,29 @@
+diff --git a/src/libslic3r/libslic3r.h b/src/libslic3r/libslic3r.h
+index f4291d36df..3cead21ee0 100644
+--- a/src/libslic3r/libslic3r.h
++++ b/src/libslic3r/libslic3r.h
+@@ -2,7 +2,7 @@
+ #define _libslic3r_h_
+ 
+ #include "libslic3r_version.h"
+-#define SLIC3R_APP_FULL_NAME "Orca Slicer"
++#define SLIC3R_APP_FULL_NAME "OrcaForCubicon"
+ #define GCODEVIEWER_APP_NAME "OrcaSlicer G-code Viewer"
+ #define GCODEVIEWER_APP_KEY  "OrcaSlicerGcodeViewer"
+ #define GCODEVIEWER_BUILD_ID std::string("OrcaSlicer G-code Viewer-") + std::string(SLIC3R_VERSION) + std::string("-RC")
+diff --git a/src/slic3r/GUI/GUI_App.cpp b/src/slic3r/GUI/GUI_App.cpp
+index 5673304607..7a09b0ed44 100644
+--- a/src/slic3r/GUI/GUI_App.cpp
++++ b/src/slic3r/GUI/GUI_App.cpp
+@@ -6020,7 +6020,10 @@ std::string GUI_App::format_display_version()
+ {
+     if (!version_display.empty()) return version_display;
+ 
+-    version_display = SoftFever_VERSION;
++    // Cubicon: show the OrcaForCubicon product version (rc suffix included so pre-releases are
++    // distinguishable) with the upstream Orca base in parentheses. Used by the splash screen and
++    // the About-dialog "copy version" action.
++    version_display = std::string(CUBI_ORCA_VERSION) + " (Orca " + SoftFever_VERSION + ")";
+     return version_display;
+ }
+ 

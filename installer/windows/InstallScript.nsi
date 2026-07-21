@@ -30,6 +30,14 @@
   !error "Failed to parse CUBI_ORCA_VERSION from ${VERSION_HEADER}"
 !endif
 
+; VIProductVersion / FileVersion require a strict numeric X.X.X.X form, so
+; derive a numeric-only version by stripping any pre-release suffix
+; (e.g. "1.5.0-rc1" -> "1.5.0"). Display fields keep the full string.
+!searchparse /noerrors "${PRODUCT_VERSION}" "" PRODUCT_VERSION_NUM "-"
+!ifndef PRODUCT_VERSION_NUM
+  !define PRODUCT_VERSION_NUM "${PRODUCT_VERSION}"
+!endif
+
 ; Build date (YYYYMMDD) at compile time
 !define /date BUILD_DATE "%Y%m%d"
 
@@ -66,13 +74,13 @@
 !define PRODUCT_ENV_ROOT_KEY "HKCU"
 !define PRODUCT_ENV_KEY "Software\${PRODUCT_NAME}"
 
-VIProductVersion ${PRODUCT_VERSION}.0
+VIProductVersion ${PRODUCT_VERSION_NUM}.0
 VIAddVersionKey ProductName "OrcaForCubicon"
 VIAddVersionKey CompanyName "Cubicon"
 VIAddVersionKey LegalCopyright "Copyright(c) 2025. Cubicon"
 VIAddVersionKey FileDescription "OrcaForCubicon Installer"
-VIAddVersionKey FileVersion ${PRODUCT_VERSION}.0
-VIAddVersionKey ProductVersion ${PRODUCT_VERSION}.0
+VIAddVersionKey FileVersion ${PRODUCT_VERSION_NUM}.0
+VIAddVersionKey ProductVersion "${PRODUCT_VERSION}"
 
 ; Locate bundled includes/plugins relative to THIS .nsi (works from any CWD)
 !addincludedir "${__FILEDIR__}\nsis_plugin"
