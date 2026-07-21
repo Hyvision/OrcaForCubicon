@@ -1,25 +1,32 @@
 #!/usr/bin/env bash
-# build_mac.sh — full one-shot OrcaForCubicon macOS pipeline:
-#   deps (if needed) -> apply overlay -> build slicer (.app)
-# Mirrors cubicon/scripts/build_win.ps1. Run from anywhere inside the repo.
+# build_mac.sh — one-command OrcaForCubicon macOS build + package.
+# Assumes the repo is already git-updated. Produces OrcaForCubicon.app and (by default) a DMG
+# with an auto version + timestamp filename:  dist/OrcaForCubicon_<ver>_macOS_<arch>_<yyyymmdd_HHMMSS>.dmg
 #
+#   (no args)     apply overlay -> build app -> package DMG   (deps auto-built only if missing)
 #   -a <arch>     arm64 (default on Apple Silicon) | x86_64 | universal
-#   -s            skip the deps build (reuse deps/build/<arch>/OrcaSlicer_dep)
+#   -c            clean: wipe build/<arch> first for a fresh app build
+#   -D            force-rebuild dependencies (otherwise reused if deps/build/<arch>/OrcaSlicer_dep exists)
+#   -P            skip packaging (stop after the .app build)
 #   -t <ver>      macOS deployment target (default 11.3)
 #
-# Packaging (rename to OrcaForCubicon.app + DMG) is a separate step: package_mac.sh
+# Notes:
+#  * Committed src/ + resources/ are upstream-pristine; Cubicon changes live only in the overlay
+#    (cubicon/patches + cubicon/resources). This script resets those trees to HEAD and re-applies
+#    the overlay every run, so it always builds the committed SSOT deterministically (uncommitted
+#    hand-edits under src/ or resources/ are discarded — commit them first).
 set -euo pipefail
 SECONDS=0
 
-ARCH=""
-SKIP_DEPS=0
-DEPLOY_TGT="11.3"
-while getopts ":a:st:h" opt; do
+ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="11.3"
+while getopts ":a:cDPt:h" opt; do
   case "$opt" in
     a) ARCH="$OPTARG" ;;
-    s) SKIP_DEPS=1 ;;
+    c) CLEAN=1 ;;
+    D) FORCE_DEPS=1 ;;
+    P) SKIP_PKG=1 ;;
     t) DEPLOY_TGT="$OPTARG" ;;
-    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-s skip deps] [-t 11.3]"; exit 0 ;;
+    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 11.3]"; exit 0 ;;
     *) ;;
   esac
 done
@@ -28,28 +35,37 @@ done
 REPO="$(git rev-parse --show-toplevel)"
 cd "$REPO"
 
-echo "== [1] Applying Cubicon overlay =="
-# NOTE: overlay must be applied on a PRISTINE tree (committed src/ is upstream-pristine;
-# Cubicon changes live only as cubicon/patches/*.patch + cubicon/resources/*).
-# If patches fail to apply, the tree already has them applied (or upstream drifted) —
-# run `git status` and reset src/ before retrying.
+echo "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches/resources) =="
+git checkout -- src resources 2>/dev/null || true   # discard prior overlay application
 bash "$REPO/cubicon/scripts/apply_overlay.sh"
 
-if [ "$SKIP_DEPS" -ne 1 ]; then
-  echo "== [2] Building dependencies ($ARCH) =="
+DEPS_MARK="deps/build/$ARCH/OrcaSlicer_dep"
+if [ "$FORCE_DEPS" -eq 1 ] || [ ! -d "$DEPS_MARK" ]; then
+  echo "== [2/5] Building dependencies ($ARCH) =="
   ./build_release_macos.sh -d -a "$ARCH" -t "$DEPLOY_TGT"
+else
+  echo "== [2/5] Reusing existing dependencies ($DEPS_MARK) — pass -D to rebuild =="
 fi
 
-echo "== [3] Building slicer ($ARCH) =="
+if [ "$CLEAN" -eq 1 ] && [ -d "build/$ARCH" ]; then
+  echo "== [3/5] Clean: removing build/$ARCH =="
+  rm -rf "build/$ARCH"
+else
+  echo "== [3/5] Incremental build (pass -c for a fresh build/$ARCH) =="
+fi
+
+echo "== [4/5] Building slicer ($ARCH) =="
 ./build_release_macos.sh -s -a "$ARCH" -t "$DEPLOY_TGT"
 
-APP="build/$ARCH/OrcaSlicer/OrcaSlicer.app"   # bundle name is hardcoded upstream; renamed in package_mac.sh
-echo
-if [ -d "$APP" ]; then
-  echo "== build_mac.sh complete: $APP =="
+APP="build/$ARCH/OrcaSlicer/OrcaSlicer.app"   # bundle name is hardcoded upstream; rebranded in package_mac.sh
+[ -d "$APP" ] || { echo "!! build finished but $APP not found — check the log above." >&2; exit 1; }
+
+if [ "$SKIP_PKG" -eq 1 ]; then
+  echo "== [5/5] Skipped packaging (-P) — app at $APP =="
 else
-  echo "!! build finished but $APP not found — check the build log above." >&2
-  exit 1
+  echo "== [5/5] Packaging DMG =="
+  bash "$REPO/cubicon/scripts/package_mac.sh" -a "$ARCH"
 fi
+
 elapsed=$SECONDS
-printf "Elapsed: %dh %dm %ds\n" $((elapsed/3600)) $((elapsed%3600/60)) $((elapsed%60))
+printf "== build_mac.sh complete in %dh %dm %ds ==\n" $((elapsed/3600)) $((elapsed%3600/60)) $((elapsed%60))

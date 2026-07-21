@@ -43,37 +43,38 @@ cd OrcaForCubicon
 
 ---
 
-## 2. 원샷 빌드 (권장)
+## 2. 한 줄 빌드 + 패키지 (권장)
 
 ```bash
-# arm64 예시. Intel은 -a x86_64, 유니버설은 -a universal
-bash cubicon/scripts/build_mac.sh -a arm64
+# git 업데이트만 되어 있으면 이 한 줄로 앱 빌드 + DMG까지 (arm64 기본)
+bash cubicon/scripts/build_mac.sh
+#   -a x86_64|universal   아키텍처 (Intel/유니버설)
+#   -c                    build/<arch> 정리 후 새로 빌드 (clean, 옵션)
+#   -D                    의존성 강제 재빌드 (기본: deps/build/<arch>/OrcaSlicer_dep 있으면 재사용)
+#   -P                    DMG 없이 앱만
 ```
 
-`build_mac.sh`가 하는 일:
-1. `apply_overlay.sh` — `cubicon/patches/0001~0005` 적용(`git apply --3way`) + `cubicon/resources/*` → `resources/*` 복사
-2. `./build_release_macos.sh -d -a <arch>` — 의존성(deps) 빌드
-3. `./build_release_macos.sh -s -a <arch>` — 슬라이서 빌드 → `build/<arch>/OrcaSlicer/OrcaSlicer.app`
-
-deps를 이미 빌드했다면 `-s`로 재사용:
-```bash
-bash cubicon/scripts/build_mac.sh -a arm64 -s
-```
+`build_mac.sh`가 매 실행마다 하는 일:
+1. `git checkout -- src resources` 후 `apply_overlay.sh` — 오버레이(패치+리소스) 재적용 (pristine에서 결정적 빌드)
+2. deps — `deps/build/<arch>/OrcaSlicer_dep`가 없을 때만 빌드 (`-D`로 강제)
+3. 슬라이서 빌드 → `build/<arch>/OrcaSlicer/OrcaSlicer.app`
+4. `package_mac.sh` — `OrcaForCubicon.app` 리브랜딩 + DMG (`-P`로 생략)
 
 ### (참고) 수동 단계로 풀어서 하려면
 ```bash
+git checkout -- src resources
 bash cubicon/scripts/apply_overlay.sh
 ./build_release_macos.sh -d -a arm64      # deps
-./build_release_macos.sh -s -a arm64      # slicer
-# 결과: build/arm64/OrcaSlicer/OrcaSlicer.app
+./build_release_macos.sh -s -a arm64      # slicer -> build/arm64/OrcaSlicer/OrcaSlicer.app
 ```
 
 ---
 
-## 3. 패키징 (DMG, OrcaForCubicon 브랜딩)
+## 3. 패키징만 따로 (DMG, OrcaForCubicon 브랜딩)
 
 ```bash
-bash cubicon/scripts/package_mac.sh -a arm64        # -> dist/OrcaForCubicon_1.5.0-rc1_macOS_arm64.dmg
+bash cubicon/scripts/package_mac.sh -a arm64
+# -> dist/OrcaForCubicon_1.5.0-rc1_macOS_arm64_<yyyymmdd_HHMMSS>.dmg
 ```
 
 `package_mac.sh`가 하는 일:

@@ -59,7 +59,8 @@ else
   echo "== [2] Skipping codesign (set CODESIGN_IDENTITY to enable; notarization also required for distribution) =="
 fi
 
-DMG="$OUTDIR/OrcaForCubicon_${VER}_macOS_${ARCH}.dmg"
+STAMP="$(date +%Y%m%d_%H%M%S)"   # wall-clock build time -> DMG filename
+DMG="$OUTDIR/OrcaForCubicon_${VER}_macOS_${ARCH}_${STAMP}.dmg"
 rm -f "$DMG"
 echo "== [3] Building DMG -> $DMG =="
 if command -v create-dmg >/dev/null 2>&1; then

@@ -23,14 +23,17 @@ New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 Write-Host "== Staging VC++/UCRT runtime DLLs app-local ==" -ForegroundColor Cyan
 & (Join-Path $repo "installer/windows/CopyRuntime.ps1") -StageDir $stage -RedistDir $redist
 
-Write-Host "== Building NSIS installer ==" -ForegroundColor Cyan
-Push-Location $outDir   # OutFile is written here; auto-rev checks here too
+$stamp = Get-Date -Format "yyyyMMdd_HHmmss"   # wall-clock build time -> installer filename
+
+Write-Host "== Building NSIS installer (stamp $stamp) ==" -ForegroundColor Cyan
+Push-Location $outDir   # OutFile is written here
 try {
     & $MakeNsis /V3 `
         "/DSTAGE_DIR=$stage" `
         "/DVERSION_HEADER=$verHdr" `
         "/DBRANDING_DIR=$brand" `
         "/DLICENSE_FILE=$license" `
+        "/DBUILD_STAMP=$stamp" `
         "$nsi"
     if ($LASTEXITCODE -ne 0) { throw "makensis failed with exit code $LASTEXITCODE" }
 } finally { Pop-Location }

@@ -38,33 +38,12 @@
   !define PRODUCT_VERSION_NUM "${PRODUCT_VERSION}"
 !endif
 
-; Build date (YYYYMMDD) at compile time
-!define /date BUILD_DATE "%Y%m%d"
-
-; Auto-increment revision (R0, R1, ...) when an installer with the same
-; version + date already exists in the output directory (up to 26/day).
-!define BUILD_REV "0"
-!macro _BUMP_REV_IF_TAKEN
-  !if /FILEEXISTS "${PRODUCT_NAME} Setup V${PRODUCT_VERSION}(R${BUILD_REV})_${BUILD_DATE}.exe"
-    !define /math _NEXT_REV ${BUILD_REV} + 1
-    !undef BUILD_REV
-    !define BUILD_REV ${_NEXT_REV}
-    !undef _NEXT_REV
-  !endif
-!macroend
-!verbose push
-!verbose 0
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!insertmacro _BUMP_REV_IF_TAKEN
-!verbose pop
+; Build timestamp (YYYYMMDD_HHMMSS) for the output filename. package_win.ps1 passes it via
+; /DBUILD_STAMP so it matches wall-clock time; falls back to makensis compile time otherwise.
+; The seconds-resolution stamp makes each filename unique (no manual revision bookkeeping).
+!ifndef BUILD_STAMP
+  !define /date BUILD_STAMP "%Y%m%d_%H%M%S"
+!endif
 
 !define PRODUCT_PUBLISHER "Cubicon"
 !define PRODUCT_WEB_SITE "http://3dcubicon.com/"
@@ -118,7 +97,7 @@ VIAddVersionKey ProductVersion "${PRODUCT_VERSION}"
 !insertmacro MUI_LANGUAGE "English"
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "${PRODUCT_NAME} Setup V${PRODUCT_VERSION}(R${BUILD_REV})_${BUILD_DATE}.exe"
+OutFile "${PRODUCT_NAME} Setup V${PRODUCT_VERSION}_${BUILD_STAMP}.exe"
 InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
 ShowInstDetails show
 ShowUnInstDetails show
