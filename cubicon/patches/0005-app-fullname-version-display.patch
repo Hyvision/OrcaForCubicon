@@ -12,7 +12,7 @@ index f4291d36df..3cead21ee0 100644
  #define GCODEVIEWER_APP_KEY  "OrcaSlicerGcodeViewer"
  #define GCODEVIEWER_BUILD_ID std::string("OrcaSlicer G-code Viewer-") + std::string(SLIC3R_VERSION) + std::string("-RC")
 diff --git a/src/slic3r/GUI/GUI_App.cpp b/src/slic3r/GUI/GUI_App.cpp
-index 5673304607..a77f40daab 100644
+index 5673304607..6f523f0625 100644
 --- a/src/slic3r/GUI/GUI_App.cpp
 +++ b/src/slic3r/GUI/GUI_App.cpp
 @@ -2872,7 +2872,9 @@ bool GUI_App::on_init_inner()
@@ -53,3 +53,69 @@ index 5673304607..a77f40daab 100644
          if (! language.empty())
          	BOOST_LOG_TRIVIAL(info) << boost::format("language provided by OrcaSlicer.conf: %1%") % language;
          else {
+@@ -9131,9 +9144,51 @@ void GUI_App::window_pos_center(wxTopLevelWindow *window)
+     }
+ }
+ 
++// Cubicon: on first run, enable every bundled Cubicon printer variant in the app config so the
++// printers become visible (only_default_printers() then returns false), select one (preferring
++// xCeler-Plus), and pull in compatible process/filament — mirroring what the config wizard does
++// when a user picks a printer. Other vendors stay available via the printer dropdown / Preferences.
++bool GUI_App::install_cubicon_default_printers()
++{
++    if (!preset_bundle)
++        return false;
++
++    std::string preferred, first;
++    int enabled = 0;
++    for (const Preset& p : preset_bundle->printers.get_presets()) {
++        if (!p.vendor || p.vendor->id != "Cubicon")
++            continue;
++        const std::string model   = p.config.opt_string("printer_model");
++        const std::string variant = p.config.opt_string("printer_variant");
++        if (model.empty() || variant.empty())
++            continue;
++        app_config->set_variant("Cubicon", model, variant, true);
++        ++enabled;
++        if (first.empty())
++            first = p.name;
++        if (model == "Cubicon xCeler-Plus")
++            preferred = p.name;
++    }
++    if (enabled == 0)
++        return false; // no Cubicon printers bundled -> fall back to the normal wizard
++
++    preset_bundle->load_installed_printers(*app_config); // refresh Preset::is_visible from the config
++    const std::string& sel = preferred.empty() ? first : preferred;
++    preset_bundle->printers.select_preset_by_name(sel, true);
++    preset_bundle->update_compatible(PresetSelectCompatibleType::Always);
++    preset_bundle->export_selections(*app_config);
++    BOOST_LOG_TRIVIAL(info) << "Cubicon: seeded default printer '" << sel << "' (" << enabled
++                            << " variants enabled), skipping config wizard";
++    return true;
++}
++
+ bool GUI_App::config_wizard_startup()
+ {
+     if (!m_app_conf_exists || preset_bundle->printers.only_default_printers()) {
++        // Cubicon: skip the slow all-vendor first-run wizard by seeding the Cubicon printers.
++        // Only fall back to the wizard if seeding fails (e.g. no Cubicon profiles present).
++        if (install_cubicon_default_printers())
++            return false;
+         BOOST_LOG_TRIVIAL(info) << "run wizard...";
+         run_wizard(ConfigWizard::RR_DATA_EMPTY);
+         BOOST_LOG_TRIVIAL(info) << "finished run wizard";
+diff --git a/src/slic3r/GUI/GUI_App.hpp b/src/slic3r/GUI/GUI_App.hpp
+index 2260417649..6b01162507 100644
+--- a/src/slic3r/GUI/GUI_App.hpp
++++ b/src/slic3r/GUI/GUI_App.hpp
+@@ -777,6 +777,9 @@ private:
+     bool            select_language();
+ 
+     bool            config_wizard_startup();
++    // Cubicon: silently enable + select the Cubicon printers on first run so the (slow, all-vendor)
++    // config wizard can be skipped. Returns false if no Cubicon printers are bundled.
++    bool            install_cubicon_default_printers();
+ 	void            check_updates(const bool verbose);
+ 
+     // select or add MachineObject
