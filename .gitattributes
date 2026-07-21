@@ -5,3 +5,6 @@
 # and bash (build_mac.sh/package_mac.sh) work regardless of the checkout platform / autocrlf.
 *.patch text eol=lf
 *.sh    text eol=lf
+
+# Compiled gettext catalogs are binary — never apply text/EOL normalization.
+*.mo    binary

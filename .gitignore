@@ -30,6 +30,9 @@ src/OrcaSlicer-doc/
 .idea/
 /.cache/
 *.mo
+# Cubicon overlay ships prebuilt .mo catalogs as SSOT (apply_overlay copies them into
+# resources/ at build time); keep the build-tree copies ignored but track the overlay ones.
+!cubicon/resources/**/*.mo
 **/process_full/
 **/machine_full/
 **/filament_full/
