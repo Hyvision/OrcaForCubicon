@@ -2872,10 +2872,7 @@ bool GUI_App::on_init_inner()
 
     // Orca: use wxWeakRef to provent wild pointer.
     wxWeakRef<SplashScreen> scrn = nullptr;
-    // Cubicon: show the splash by default, including the very first launch. On first run no config
-    // file exists yet, so AppConfig::set_defaults (which would set show_splash_screen=true) has not
-    // run and get() returns empty; treat anything other than an explicit "false" as enabled.
-    if (app_config->get("show_splash_screen") != "false") {
+    if (app_config->get("show_splash_screen") == "true") {
         // Detect position (display) to show the splash screen
         // Now this position is equal to the mainframe position
         wxPoint splashscreen_pos = wxDefaultPosition;
@@ -6023,10 +6020,7 @@ std::string GUI_App::format_display_version()
 {
     if (!version_display.empty()) return version_display;
 
-    // Cubicon: show the OrcaForCubicon product version (rc suffix included so pre-releases are
-    // distinguishable) with the upstream Orca base in parentheses. Used by the splash screen and
-    // the About-dialog "copy version" action.
-    version_display = std::string(CUBI_ORCA_VERSION) + " (Orca " + SoftFever_VERSION + ")";
+    version_display = SoftFever_VERSION;
     return version_display;
 }
 
@@ -7520,14 +7514,6 @@ bool GUI_App::load_language(wxString language, bool initial)
 	    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(from_u8(localization_dir()));
     	// Get the active language from PrusaSlicer.ini, or empty string if the key does not exist.
         language = app_config->get("language");
-        if (language.empty()) {
-            // Cubicon: default the UI to Korean when the user has not chosen a language yet.
-            // This runs on first launch too (AppConfig::set_defaults is skipped when no config
-            // file exists), so the very first start comes up in Korean. Persisted so the user's
-            // later choice in Preferences overrides it.
-            language = "ko_KR";
-            app_config->set("language", "ko_KR");
-        }
         if (! language.empty())
         	BOOST_LOG_TRIVIAL(info) << boost::format("language provided by OrcaSlicer.conf: %1%") % language;
         else {
