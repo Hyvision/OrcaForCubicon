@@ -21,8 +21,8 @@
 set -euo pipefail
 SECONDS=0
 
-ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="11.3"; NONINTERACTIVE=0
-while getopts ":a:cDPt:yh" opt; do
+ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="11.3"; NONINTERACTIVE=0; CPU_PCT=70
+while getopts ":a:cDPt:yj:h" opt; do
   case "$opt" in
     a) ARCH="$OPTARG" ;;
     c) CLEAN=1 ;;
@@ -30,11 +30,21 @@ while getopts ":a:cDPt:yh" opt; do
     P) SKIP_PKG=1 ;;
     t) DEPLOY_TGT="$OPTARG" ;;
     y) NONINTERACTIVE=1 ;;
-    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 11.3] [-y]"; exit 0 ;;
+    j) CPU_PCT="$OPTARG" ;;
+    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 11.3] [-j cpu%] [-y]"; exit 0 ;;
     *) ;;
   esac
 done
 [ -z "$ARCH" ] && ARCH="$(uname -m)"   # arm64 on Apple Silicon, x86_64 on Intel
+
+# CPU throttling: cap parallel build jobs to ~CPU_PCT% of the logical cores so the machine stays
+# usable. Clang has no /MP; Ninja/Xcode honor CMAKE_BUILD_PARALLEL_LEVEL, so one knob caps both
+# the deps and slicer builds (build_release_macos.sh uses `cmake --build`).
+CORES="$(sysctl -n hw.logicalcpu 2>/dev/null || nproc 2>/dev/null || echo 8)"
+[ "$CPU_PCT" -lt 10 ] && CPU_PCT=10; [ "$CPU_PCT" -gt 100 ] && CPU_PCT=100
+JOBS=$(( CORES * CPU_PCT / 100 )); [ "$JOBS" -lt 1 ] && JOBS=1
+export CMAKE_BUILD_PARALLEL_LEVEL="$JOBS"
+echo "CPU throttle: ${CPU_PCT}% of ${CORES} cores -> ${JOBS} parallel build job(s)"
 
 REPO="$(git rev-parse --show-toplevel)"
 cd "$REPO"

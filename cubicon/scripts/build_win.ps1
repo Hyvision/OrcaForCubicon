@@ -19,13 +19,24 @@ param(
     [switch]$Clean,
     [switch]$Deps,
     [switch]$SkipPackage,
-    [Alias("y")][switch]$NonInteractive
+    [Alias("y")][switch]$NonInteractive,
+    [int]$CpuPercent = 70          # cap build CPU usage (~% of logical cores); keeps the PC usable
 )
 $ErrorActionPreference = "Stop"
 $repo  = (git -C $PSScriptRoot rev-parse --show-toplevel)
 $cmake = "C:/Program Files/CMake/bin/cmake.exe"
 $gen   = "Visual Studio 17 2022"     # NOTE: needs VS2022 (build_release.bat hardcodes VS2019)
 $depOut = "$repo/deps/build/OrcaSlicer_dep/usr/local"
+
+# CPU throttling: cap the number of parallel compiler processes to ~CpuPercent of the logical
+# cores so the machine stays responsive. MSVC has TWO parallelism levels that both default to all
+# cores — the compiler's /MP (files within a project) and MSBuild's /m (projects). We cap /MP to
+# $jobs and build one project at a time (-m:1) so the total cl.exe count never exceeds $jobs.
+$cores = [int]$env:NUMBER_OF_PROCESSORS
+if ($cores -lt 1) { $cores = 1 }
+$pct = [Math]::Min(100, [Math]::Max(10, $CpuPercent))
+$jobs = [Math]::Max(1, [int][Math]::Floor($cores * $pct / 100.0))
+Write-Host ("CPU throttle: {0}% of {1} cores -> {2} parallel compile job(s)" -f $pct, $cores, $jobs) -ForegroundColor DarkGray
 
 function Ask-YesNo([string]$question, [bool]$default) {
     $suffix = if ($default) { "[Y/n]" } else { "[y/N]" }
@@ -72,7 +83,9 @@ if ($optDeps -or -not (Test-Path $depOut)) {
     try {
         & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release
         if ($LASTEXITCODE -ne 0) { throw "deps configure failed" }
-        & $cmake --build . --config Release --target deps -- -m
+        # Cap MSBuild project-parallelism for deps (sub-builds may still spike briefly; deps is a
+        # one-time cost, reused afterwards via -SkipDeps / auto-skip).
+        & $cmake --build . --config Release --target deps -- -m:$jobs
         if ($LASTEXITCODE -ne 0) { throw "deps build failed (see notes: OpenSSL perl / Boost extract)" }
     } finally { Pop-Location }
 } else {
@@ -90,9 +103,13 @@ Write-Host "== [4/5] Configure + build + install app ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path "$repo/build" | Out-Null
 Push-Location "$repo/build"
 try {
-    & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release
+    # Replace the bare /MP (all cores) with /MP:$jobs so file-level compilation is capped, then
+    # build one project at a time (-m:1) so total parallel cl.exe == $jobs (~CpuPercent of cores).
+    & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release `
+        -DSLIC3R_MSVC_COMPILE_PARALLEL=OFF `
+        "-DCMAKE_CXX_FLAGS=/MP$jobs" "-DCMAKE_C_FLAGS=/MP$jobs"
     if ($LASTEXITCODE -ne 0) { throw "app configure failed" }
-    & $cmake --build . --config Release --target ALL_BUILD -- -m
+    & $cmake --build . --config Release --target ALL_BUILD -- -m:1
     if ($LASTEXITCODE -ne 0) { throw "app build failed" }
     & $cmake --build . --config Release --target install
     if ($LASTEXITCODE -ne 0) { throw "app install failed" }
