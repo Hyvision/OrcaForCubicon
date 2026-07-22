@@ -73,7 +73,10 @@ $env:PATH = "C:/MyDevelop/Strawberry/perl/bin;" + $env:PATH
 Set-Location $repo
 
 Write-Host "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches/resources) ==" -ForegroundColor Cyan
-git checkout -- src resources 2>$null    # discard prior overlay application; ignore if nothing to reset
+# Reset every tree the overlay touches back to HEAD before re-applying — including the ROOT files
+# some patches modify (CMakeLists.txt <- 0007, version.inc <- 0001); otherwise a prior apply_overlay
+# leaves them dirty vs the index and `git apply` fails "does not match index".
+git checkout -- src resources CMakeLists.txt version.inc 2>$null
 & "$repo/cubicon/scripts/apply_overlay.ps1"
 
 if ($optDeps -or -not (Test-Path $depOut)) {

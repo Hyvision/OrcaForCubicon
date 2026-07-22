@@ -90,7 +90,10 @@ if [ "$NONINTERACTIVE" -ne 1 ] && [ -t 0 ]; then
 fi
 
 echo "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches/resources) =="
-git checkout -- src resources 2>/dev/null || true   # discard prior overlay application
+# Reset every tree the overlay touches back to HEAD before re-applying — including the ROOT files
+# some patches modify (CMakeLists.txt <- 0007, version.inc <- 0001); otherwise a prior apply_overlay
+# leaves them dirty vs the index and `git apply` fails "does not match index".
+git checkout -- src resources CMakeLists.txt version.inc 2>/dev/null || true
 bash "$REPO/cubicon/scripts/apply_overlay.sh"
 
 DEPS_MARK="deps/build/$ARCH/OrcaSlicer_dep"
