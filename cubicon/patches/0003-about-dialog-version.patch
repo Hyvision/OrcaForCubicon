@@ -1,8 +1,28 @@
 diff --git a/src/slic3r/GUI/AboutDialog.cpp b/src/slic3r/GUI/AboutDialog.cpp
-index 51373890af..78110f9909 100644
+index 51373890af..bd48e37af5 100644
 --- a/src/slic3r/GUI/AboutDialog.cpp
 +++ b/src/slic3r/GUI/AboutDialog.cpp
-@@ -243,7 +243,7 @@ AboutDialog::AboutDialog()
+@@ -214,7 +214,9 @@ AboutDialog::AboutDialog()
+     SetFont(wxGetApp().normal_font());
+ 	SetBackgroundColour(*wxWHITE);
+ 
+-    wxPanel* m_panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(FromDIP(560), FromDIP(125)), wxTAB_TRAVERSAL);
++    // Cubicon: the OrcaForCubicon logo is square (not the wide Orca wordmark), so give the logo
++    // area more height and render it larger (see px_cnt below) instead of a small 125px square.
++    wxPanel* m_panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(FromDIP(560), FromDIP(200)), wxTAB_TRAVERSAL);
+ 
+     wxBoxSizer *panel_versizer = new wxBoxSizer(wxVERTICAL);
+     wxBoxSizer *vesizer  = new wxBoxSizer(wxVERTICAL);
+@@ -230,7 +232,7 @@ AboutDialog::AboutDialog()
+ 	bool is_dark = wxGetApp().app_config->get("dark_color_mode") == "1";
+ 
+     // logo
+-    m_logo_bitmap = ScalableBitmap(this, is_dark ? "OrcaSlicer_about_dark" : "OrcaSlicer_about", 125);
++    m_logo_bitmap = ScalableBitmap(this, is_dark ? "OrcaSlicer_about_dark" : "OrcaSlicer_about", 190);
+     m_logo = new wxStaticBitmap(this, wxID_ANY, m_logo_bitmap.bmp(), wxDefaultPosition,wxDefaultSize, 0);
+     m_logo->SetSizer(vesizer);
+ 
+@@ -243,7 +245,7 @@ AboutDialog::AboutDialog()
          // _build_string_font.SetStyle(wxFONTSTYLE_ITALIC);
  
          vesizer->Add(0, 0, 1, wxEXPAND, FromDIP(5));
