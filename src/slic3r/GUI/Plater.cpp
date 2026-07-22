@@ -9623,14 +9623,6 @@ void Plater::priv::on_select_preset(wxCommandEvent &evt)
 
     // update plater with new config
     q->on_config_change(wxGetApp().preset_bundle->full_config());
-
-    // Cubicon: a new filament may carry a first-layer-speed override, so refresh the Process tab
-    // to keep its (read-only) first layer speed display in sync with what will be sliced.
-    if (preset_type == Preset::TYPE_FILAMENT) {
-        if (Tab* print_tab = wxGetApp().get_tab(Preset::TYPE_PRINT))
-            static_cast<TabPrint*>(print_tab)->update_first_layer_speed_override_ui();
-    }
-
     if (preset_type == Preset::TYPE_PRINTER) {
     /* Settings list can be changed after printer preset changing, so
      * update all settings items for all item had it.

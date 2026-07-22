@@ -214,9 +214,7 @@ AboutDialog::AboutDialog()
     SetFont(wxGetApp().normal_font());
 	SetBackgroundColour(*wxWHITE);
 
-    // Cubicon: the OrcaForCubicon logo is square (not the wide Orca wordmark), so give the logo
-    // area more height and render it larger (see px_cnt below) instead of a small 125px square.
-    wxPanel* m_panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(FromDIP(560), FromDIP(200)), wxTAB_TRAVERSAL);
+    wxPanel* m_panel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(FromDIP(560), FromDIP(125)), wxTAB_TRAVERSAL);
 
     wxBoxSizer *panel_versizer = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer *vesizer  = new wxBoxSizer(wxVERTICAL);
@@ -232,46 +230,36 @@ AboutDialog::AboutDialog()
 	bool is_dark = wxGetApp().app_config->get("dark_color_mode") == "1";
 
     // logo
-    // Cubicon: horizontal layout — the CUBICON BI logo (left) and the version block (right) sit
-    // side by side and vertically centered, so the version text never overlaps the logo.
-    (void)is_dark;
-    wxImage logo_image(from_u8(Slic3r::var("OrcaForCubicon_about.png")), wxBITMAP_TYPE_PNG);
-    if (logo_image.IsOk()) {
-        const int logo_h = FromDIP(140);
-        const int logo_w = logo_image.GetWidth() * logo_h / logo_image.GetHeight();
-        logo_image.Rescale(logo_w, logo_h, wxIMAGE_QUALITY_HIGH);
-    }
-    m_logo = new wxStaticBitmap(this, wxID_ANY, wxBitmap(logo_image), wxDefaultPosition, wxDefaultSize, 0);
+    m_logo_bitmap = ScalableBitmap(this, is_dark ? "OrcaSlicer_about_dark" : "OrcaSlicer_about", 125);
+    m_logo = new wxStaticBitmap(this, wxID_ANY, m_logo_bitmap.bmp(), wxDefaultPosition,wxDefaultSize, 0);
+    m_logo->SetSizer(vesizer);
 
-    // version block (right of the logo)
+    panel_versizer->Add(m_logo, 1, wxALL | wxEXPAND, 0);
+
+    // version
     {
+
         auto _build_string_font = Label::Body_12;
-        auto          version_string = std::string(CUBI_ORCA_VERSION) + " (Orca " + std::string(SoftFever_VERSION) + ")"; // OrcaForCubicon product version + Orca base
+        // _build_string_font.SetStyle(wxFONTSTYLE_ITALIC);
+
+        vesizer->Add(0, 0, 1, wxEXPAND, FromDIP(5));
+        auto          version_string = std::string(SoftFever_VERSION); // _L("Orca Slicer ") + " " + std::string(SoftFever_VERSION);
         wxStaticText* version = new wxStaticText(this, wxID_ANY, version_string.c_str(), wxDefaultPosition, wxDefaultSize);
         wxStaticText* credits_string = new wxStaticText(this, wxID_ANY, wxString::Format("Build %s", std::string(GIT_COMMIT_HASH)), wxDefaultPosition, wxDefaultSize);
         credits_string->SetFont(_build_string_font);
         wxFont version_font = GetFont();
-        version_font = version_font.Scaled(1.6f); // SetPointSize(20) not works on macOS because it uses a 72 PPI reference
+        version_font = version_font.Scaled(1.85f); // SetPointSize(20) not works on macOS because it uses a 72 PPI reference
         version->SetFont(version_font);
         version->SetForegroundColour(wxColour("#949494"));
         credits_string->SetForegroundColour(wxColour("#949494"));
         version->SetBackgroundColour(wxColour("#FFFFFF"));
         credits_string->SetBackgroundColour(wxColour("#FFFFFF"));
 
-        vesizer->Add(version, 0, wxALIGN_RIGHT);
+        vesizer->Add(version, 0, wxRIGHT | wxALIGN_RIGHT, FromDIP(20));
         vesizer->AddSpacer(FromDIP(5));
-        vesizer->Add(credits_string, 0, wxALIGN_RIGHT);
+        vesizer->Add(credits_string, 0, wxRIGHT | wxALIGN_RIGHT, FromDIP(20));
+        vesizer->Add(0, 0, 1, wxEXPAND, FromDIP(5));
     }
-
-    // row: logo | stretch | version, vertically centered in the panel (no overlap)
-    wxBoxSizer* logo_row = new wxBoxSizer(wxHORIZONTAL);
-    logo_row->Add(m_logo, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, FromDIP(24));
-    logo_row->AddStretchSpacer(1);
-    logo_row->Add(vesizer, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(24));
-
-    panel_versizer->AddStretchSpacer(1);
-    panel_versizer->Add(logo_row, 0, wxEXPAND);
-    panel_versizer->AddStretchSpacer(1);
 
     wxBoxSizer *text_sizer_horiz = new wxBoxSizer(wxHORIZONTAL);
     wxBoxSizer *text_sizer = new wxBoxSizer(wxVERTICAL);
@@ -372,16 +360,8 @@ AboutDialog::AboutDialog()
 
 void AboutDialog::on_dpi_changed(const wxRect &suggested_rect)
 {
-    // Cubicon: reload + rescale the CUBICON BI logo for the new DPI (see ctor).
-    {
-        wxImage logo_image(from_u8(Slic3r::var("OrcaForCubicon_about.png")), wxBITMAP_TYPE_PNG);
-        if (logo_image.IsOk()) {
-            const int logo_h = FromDIP(140);
-            const int logo_w = logo_image.GetWidth() * logo_h / logo_image.GetHeight();
-            logo_image.Rescale(logo_w, logo_h, wxIMAGE_QUALITY_HIGH);
-        }
-        m_logo->SetBitmap(wxBitmap(logo_image));
-    }
+    m_logo_bitmap.msw_rescale();
+    m_logo->SetBitmap(m_logo_bitmap.bmp());
 
     const wxFont& font = GetFont();
     const int fs = font.GetPointSize() - 1;
