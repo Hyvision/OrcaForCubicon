@@ -1,6 +1,6 @@
 {
     "type": "filament",
-	"instantiation": "true",
+	"instantiation": "false",
     "version": "1.0.0.2",
 
     "compatible_printers": [
