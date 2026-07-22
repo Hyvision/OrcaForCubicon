@@ -1,5 +1,5 @@
 diff --git a/src/slic3r/GUI/AboutDialog.cpp b/src/slic3r/GUI/AboutDialog.cpp
-index 51373890af..d600cdfe52 100644
+index 51373890af..00f1bf9861 100644
 --- a/src/slic3r/GUI/AboutDialog.cpp
 +++ b/src/slic3r/GUI/AboutDialog.cpp
 @@ -214,7 +214,9 @@ AboutDialog::AboutDialog()
@@ -13,24 +13,26 @@ index 51373890af..d600cdfe52 100644
  
      wxBoxSizer *panel_versizer = new wxBoxSizer(wxVERTICAL);
      wxBoxSizer *vesizer  = new wxBoxSizer(wxVERTICAL);
-@@ -230,8 +232,14 @@ AboutDialog::AboutDialog()
+@@ -230,8 +232,16 @@ AboutDialog::AboutDialog()
  	bool is_dark = wxGetApp().app_config->get("dark_color_mode") == "1";
  
      // logo
 -    m_logo_bitmap = ScalableBitmap(this, is_dark ? "OrcaSlicer_about_dark" : "OrcaSlicer_about", 125);
 -    m_logo = new wxStaticBitmap(this, wxID_ANY, m_logo_bitmap.bmp(), wxDefaultPosition,wxDefaultSize, 0);
-+    // Cubicon: the splash SVG renders small in the About panel (its logo occupies only part of the
-+    // 480x480 splash canvas), so load the square Cubicon PNG logo directly at a readable size.
++    // Cubicon: show the official horizontal CUBICON BI logo (raster), scaled by height so the wide
++    // wordmark fits the About panel. The About background is white, so the color logo is used.
 +    (void)is_dark;
-+    wxImage logo_image(from_u8(Slic3r::var("OrcaSlicer_192px.png")), wxBITMAP_TYPE_PNG);
-+    const int logo_px = FromDIP(160);
-+    if (logo_image.IsOk())
-+        logo_image.Rescale(logo_px, logo_px, wxIMAGE_QUALITY_HIGH);
++    wxImage logo_image(from_u8(Slic3r::var("OrcaForCubicon_about.png")), wxBITMAP_TYPE_PNG);
++    if (logo_image.IsOk()) {
++        const int logo_h = FromDIP(150);
++        const int logo_w = logo_image.GetWidth() * logo_h / logo_image.GetHeight();
++        logo_image.Rescale(logo_w, logo_h, wxIMAGE_QUALITY_HIGH);
++    }
 +    m_logo = new wxStaticBitmap(this, wxID_ANY, wxBitmap(logo_image), wxDefaultPosition, wxDefaultSize, 0);
      m_logo->SetSizer(vesizer);
  
      panel_versizer->Add(m_logo, 1, wxALL | wxEXPAND, 0);
-@@ -243,7 +251,7 @@ AboutDialog::AboutDialog()
+@@ -243,7 +253,7 @@ AboutDialog::AboutDialog()
          // _build_string_font.SetStyle(wxFONTSTYLE_ITALIC);
  
          vesizer->Add(0, 0, 1, wxEXPAND, FromDIP(5));
@@ -39,18 +41,20 @@ index 51373890af..d600cdfe52 100644
          wxStaticText* version = new wxStaticText(this, wxID_ANY, version_string.c_str(), wxDefaultPosition, wxDefaultSize);
          wxStaticText* credits_string = new wxStaticText(this, wxID_ANY, wxString::Format("Build %s", std::string(GIT_COMMIT_HASH)), wxDefaultPosition, wxDefaultSize);
          credits_string->SetFont(_build_string_font);
-@@ -360,8 +368,14 @@ AboutDialog::AboutDialog()
+@@ -360,8 +370,16 @@ AboutDialog::AboutDialog()
  
  void AboutDialog::on_dpi_changed(const wxRect &suggested_rect)
  {
 -    m_logo_bitmap.msw_rescale();
 -    m_logo->SetBitmap(m_logo_bitmap.bmp());
-+    // Cubicon: reload + rescale the Cubicon PNG logo for the new DPI (see ctor).
++    // Cubicon: reload + rescale the CUBICON BI logo for the new DPI (see ctor).
 +    {
-+        wxImage logo_image(from_u8(Slic3r::var("OrcaSlicer_192px.png")), wxBITMAP_TYPE_PNG);
-+        const int logo_px = FromDIP(160);
-+        if (logo_image.IsOk())
-+            logo_image.Rescale(logo_px, logo_px, wxIMAGE_QUALITY_HIGH);
++        wxImage logo_image(from_u8(Slic3r::var("OrcaForCubicon_about.png")), wxBITMAP_TYPE_PNG);
++        if (logo_image.IsOk()) {
++            const int logo_h = FromDIP(150);
++            const int logo_w = logo_image.GetWidth() * logo_h / logo_image.GetHeight();
++            logo_image.Rescale(logo_w, logo_h, wxIMAGE_QUALITY_HIGH);
++        }
 +        m_logo->SetBitmap(wxBitmap(logo_image));
 +    }
  
