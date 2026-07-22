@@ -1,0 +1,19 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8dcd4cf004..eb0b2301b2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -215,7 +215,13 @@ endif ()
+ 
+ if (MSVC)
+     if (SLIC3R_MSVC_COMPILE_PARALLEL AND NOT IS_CLANG_CL)
+-           add_compile_options(/MP)
++           # Cubicon: SLIC3R_MSVC_PARALLEL_COUNT caps the /MP process count (used to throttle build
++           # CPU). Empty/unset -> bare /MP (all cores), preserving upstream behavior.
++           if (SLIC3R_MSVC_PARALLEL_COUNT)
++               add_compile_options(/MP${SLIC3R_MSVC_PARALLEL_COUNT})
++           else ()
++               add_compile_options(/MP)
++           endif ()
+     endif ()
+     # /bigobj (Increase Number of Sections in .Obj file)
+     # error C3859: virtual memory range for PCH exceeded; please recompile with a command line option of '-Zm90' or greater

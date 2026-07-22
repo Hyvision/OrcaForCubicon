@@ -102,13 +102,23 @@ if ($optClean -and (Test-Path "$repo/build")) {
 
 Write-Host "== [4/5] Configure + build + install app ==" -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path "$repo/build" | Out-Null
+# Recover from an earlier throttle build that clobbered CMAKE_CXX_FLAGS (=/MP<n>, dropping the
+# MSVC defaults like /DWIN32 -> C1017). If detected, wipe the cache for a clean, correct reconfigure.
+$cacheFile = "$repo/build/CMakeCache.txt"
+if (Test-Path $cacheFile) {
+    $cxxLine = (Select-String -Path $cacheFile -Pattern '^CMAKE_CXX_FLAGS:' | Select-Object -First 1).Line
+    if ($cxxLine -and ($cxxLine -match '/MP') -and ($cxxLine -notmatch 'WIN32')) {
+        Write-Host "  Detected a poisoned CMake cache (CXX flags = '$cxxLine'); removing build/ for a clean reconfigure." -ForegroundColor Yellow
+        Remove-Item -Recurse -Force "$repo/build"
+        New-Item -ItemType Directory -Force -Path "$repo/build" | Out-Null
+    }
+}
 Push-Location "$repo/build"
 try {
-    # Replace the bare /MP (all cores) with /MP:$jobs so file-level compilation is capped, then
-    # build one project at a time (-m:1) so total parallel cl.exe == $jobs (~CpuPercent of cores).
-    & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release `
-        -DSLIC3R_MSVC_COMPILE_PARALLEL=OFF `
-        "-DCMAKE_CXX_FLAGS=/MP$jobs" "-DCMAKE_C_FLAGS=/MP$jobs"
+    # Throttle via SLIC3R_MSVC_PARALLEL_COUNT (adds /MP:$jobs to the existing flags — does NOT
+    # replace CMAKE_CXX_FLAGS, so the MSVC defaults /DWIN32 /D_WINDOWS /EHsc stay intact), then
+    # build one project at a time (--parallel 1) so total parallel cl.exe == $jobs (~CpuPercent).
+    & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release "-DSLIC3R_MSVC_PARALLEL_COUNT=$jobs"
     if ($LASTEXITCODE -ne 0) { throw "app configure failed" }
     # --parallel 1: build one project at a time so total cl.exe == the /MP:$jobs file-level cap
     # (~CpuPercent of cores). CMake emits a correct /m:1 (avoids the "-- -m:1" -> MSB1031 mangling).

@@ -306,8 +306,15 @@ public:
         m_fg_color = StateColor::darkModeColorFor(wxColour("#6B6A6A"));
         bool dark_mode = m_fg_color != wxColour("#6B6A6A");
         wxSize sz  = m_window->GetClientSize();
-        BitmapCache bmp_cache;
-        m_logo_bmp = *bmp_cache.load_svg(dark_mode ? "splash_logo_dark" : "splash_logo", sz.GetWidth(), sz.GetHeight());
+        // Cubicon: load the official horizontal CUBICON BI logo (raster PNG) and scale it to fit
+        // the splash width; it is drawn centered in OnPaint. (The previous splash SVG rendered small.)
+        wxImage splash_img(from_u8(Slic3r::var(dark_mode ? "splash_logo_dark.png" : "splash_logo.png")), wxBITMAP_TYPE_PNG);
+        if (splash_img.IsOk()) {
+            const int target_w = int(sz.GetWidth() * 0.78);
+            const int target_h = splash_img.GetHeight() * target_w / splash_img.GetWidth();
+            splash_img.Rescale(target_w, target_h, wxIMAGE_QUALITY_HIGH);
+            m_logo_bmp = wxBitmap(splash_img);
+        }
 
         m_window->Bind(wxEVT_PAINT, &SplashScreen::OnPaint, this);
         m_window->Refresh();
@@ -322,7 +329,12 @@ public:
         dc.SetBackground(wxBrush(m_bg_color));
         dc.Clear();
         if (m_logo_bmp.IsOk())
-            dc.DrawBitmap(m_logo_bmp, 0, 0, true);
+            // Cubicon: center the CUBICON logo horizontally, placed in the upper area so the
+            // loading text below has room.
+            dc.DrawBitmap(m_logo_bmp,
+                          (c_sz.GetWidth()  - m_logo_bmp.GetWidth())  / 2,
+                          (c_sz.GetHeight() - m_logo_bmp.GetHeight()) / 3,
+                          true);
 
         wxRect rc = wxRect(0, 0, c_sz.GetWidth(), 0);
         dc.SetTextForeground(m_fg_color);
@@ -2872,7 +2884,9 @@ bool GUI_App::on_init_inner()
 
     // Orca: use wxWeakRef to provent wild pointer.
     wxWeakRef<SplashScreen> scrn = nullptr;
-    if (app_config->get("show_splash_screen") == "true") {
+    // Cubicon: always show the splash screen (branding), regardless of the show_splash_screen
+    // setting or a value inherited from an older config. Users cannot turn it off.
+    if (true) {
         // Detect position (display) to show the splash screen
         // Now this position is equal to the mainframe position
         wxPoint splashscreen_pos = wxDefaultPosition;
@@ -6020,7 +6034,10 @@ std::string GUI_App::format_display_version()
 {
     if (!version_display.empty()) return version_display;
 
-    version_display = SoftFever_VERSION;
+    // Cubicon: show the OrcaForCubicon product version (rc suffix included so pre-releases are
+    // distinguishable) with the upstream Orca base in parentheses. Used by the splash screen and
+    // the About-dialog "copy version" action.
+    version_display = std::string(CUBI_ORCA_VERSION) + " (Orca " + SoftFever_VERSION + ")";
     return version_display;
 }
 
@@ -7514,6 +7531,14 @@ bool GUI_App::load_language(wxString language, bool initial)
 	    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(from_u8(localization_dir()));
     	// Get the active language from PrusaSlicer.ini, or empty string if the key does not exist.
         language = app_config->get("language");
+        if (language.empty()) {
+            // Cubicon: default the UI to Korean when the user has not chosen a language yet.
+            // This runs on first launch too (AppConfig::set_defaults is skipped when no config
+            // file exists), so the very first start comes up in Korean. Persisted so the user's
+            // later choice in Preferences overrides it.
+            language = "ko_KR";
+            app_config->set("language", "ko_KR");
+        }
         if (! language.empty())
         	BOOST_LOG_TRIVIAL(info) << boost::format("language provided by OrcaSlicer.conf: %1%") % language;
         else {
@@ -9131,9 +9156,51 @@ void GUI_App::window_pos_center(wxTopLevelWindow *window)
     }
 }
 
+// Cubicon: on first run, enable every bundled Cubicon printer variant in the app config so the
+// printers become visible (only_default_printers() then returns false), select one (preferring
+// xCeler-Plus), and pull in compatible process/filament — mirroring what the config wizard does
+// when a user picks a printer. Other vendors stay available via the printer dropdown / Preferences.
+bool GUI_App::install_cubicon_default_printers()
+{
+    if (!preset_bundle)
+        return false;
+
+    std::string preferred, first;
+    int enabled = 0;
+    for (const Preset& p : preset_bundle->printers.get_presets()) {
+        if (!p.vendor || p.vendor->id != "Cubicon")
+            continue;
+        const std::string model   = p.config.opt_string("printer_model");
+        const std::string variant = p.config.opt_string("printer_variant");
+        if (model.empty() || variant.empty())
+            continue;
+        app_config->set_variant("Cubicon", model, variant, true);
+        ++enabled;
+        if (first.empty())
+            first = p.name;
+        if (model == "Cubicon xCeler-Plus")
+            preferred = p.name;
+    }
+    if (enabled == 0)
+        return false; // no Cubicon printers bundled -> fall back to the normal wizard
+
+    preset_bundle->load_installed_printers(*app_config); // refresh Preset::is_visible from the config
+    const std::string& sel = preferred.empty() ? first : preferred;
+    preset_bundle->printers.select_preset_by_name(sel, true);
+    preset_bundle->update_compatible(PresetSelectCompatibleType::Always);
+    preset_bundle->export_selections(*app_config);
+    BOOST_LOG_TRIVIAL(info) << "Cubicon: seeded default printer '" << sel << "' (" << enabled
+                            << " variants enabled), skipping config wizard";
+    return true;
+}
+
 bool GUI_App::config_wizard_startup()
 {
     if (!m_app_conf_exists || preset_bundle->printers.only_default_printers()) {
+        // Cubicon: skip the slow all-vendor first-run wizard by seeding the Cubicon printers.
+        // Only fall back to the wizard if seeding fails (e.g. no Cubicon profiles present).
+        if (install_cubicon_default_printers())
+            return false;
         BOOST_LOG_TRIVIAL(info) << "run wizard...";
         run_wizard(ConfigWizard::RR_DATA_EMPTY);
         BOOST_LOG_TRIVIAL(info) << "finished run wizard";
