@@ -32,4 +32,8 @@ if [ -d cubicon/resources ]; then
 else
   echo "  (no resource overlay yet)"
 fi
+
+echo "== [3/3] Pruning to Cubicon-only profiles =="
+bash "$REPO_ROOT/cubicon/scripts/prune_profiles.sh"
+
 echo "Done."

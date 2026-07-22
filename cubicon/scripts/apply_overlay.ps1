@@ -33,4 +33,8 @@ if (Test-Path $src) {
 } else {
     Write-Host "  (no resource overlay yet)"
 }
+
+Write-Host "== [3/3] Pruning to Cubicon-only profiles ==" -ForegroundColor Cyan
+& (Join-Path $RepoRoot "cubicon/scripts/prune_profiles.ps1")
+
 Write-Host "Done." -ForegroundColor Green
