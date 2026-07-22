@@ -84,8 +84,9 @@ if ($optDeps -or -not (Test-Path $depOut)) {
         & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release
         if ($LASTEXITCODE -ne 0) { throw "deps configure failed" }
         # Cap MSBuild project-parallelism for deps (sub-builds may still spike briefly; deps is a
-        # one-time cost, reused afterwards via -SkipDeps / auto-skip).
-        & $cmake --build . --config Release --target deps -- -m:$jobs
+        # one-time cost, reused afterwards via -SkipDeps / auto-skip). Use CMake's --parallel so it
+        # emits a correctly-formatted /m:N (passing "-- -m:N" gets mangled into "-m: N" -> MSB1031).
+        & $cmake --build . --config Release --target deps --parallel $jobs
         if ($LASTEXITCODE -ne 0) { throw "deps build failed (see notes: OpenSSL perl / Boost extract)" }
     } finally { Pop-Location }
 } else {
@@ -109,7 +110,9 @@ try {
         -DSLIC3R_MSVC_COMPILE_PARALLEL=OFF `
         "-DCMAKE_CXX_FLAGS=/MP$jobs" "-DCMAKE_C_FLAGS=/MP$jobs"
     if ($LASTEXITCODE -ne 0) { throw "app configure failed" }
-    & $cmake --build . --config Release --target ALL_BUILD -- -m:1
+    # --parallel 1: build one project at a time so total cl.exe == the /MP:$jobs file-level cap
+    # (~CpuPercent of cores). CMake emits a correct /m:1 (avoids the "-- -m:1" -> MSB1031 mangling).
+    & $cmake --build . --config Release --target ALL_BUILD --parallel 1
     if ($LASTEXITCODE -ne 0) { throw "app build failed" }
     & $cmake --build . --config Release --target install
     if ($LASTEXITCODE -ne 0) { throw "app install failed" }
