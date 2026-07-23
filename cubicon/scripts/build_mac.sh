@@ -49,6 +49,25 @@ echo "CPU throttle: ${CPU_PCT}% of ${CORES} cores -> ${JOBS} parallel build job(
 REPO="$(git rev-parse --show-toplevel)"
 cd "$REPO"
 
+# The slicer build uses CMake's "Xcode" generator, which shells out to
+# xcodebuild -- that refuses to run when the active developer directory is
+# the bare Command Line Tools package. Switch to the full Xcode.app if it's
+# installed and not already selected (asks for sudo password once).
+if [[ "$(xcode-select -p 2>/dev/null)" != *"Xcode.app"* ]]; then
+  if [ -d "/Applications/Xcode.app" ]; then
+    echo "== xcode-select: switching active developer directory to Xcode.app =="
+    sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+  else
+    echo "!! /Applications/Xcode.app not found -- the slicer build step (CMake Xcode generator) will fail without it." >&2
+  fi
+fi
+
+# Some autoconf-based deps (e.g. GMP) invoke `cc` directly without -isysroot.
+# On this machine clang's implicit default-SDK lookup fails for those bare
+# invocations ("ld: library 'System' not found") unless SDKROOT is set
+# explicitly, so export it for the whole build (deps + slicer).
+export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+
 ask_yesno() {   # $1=question  $2=default(y|n) ; returns 0 for yes
   local q="$1" def="$2" ans suffix
   if [ "$def" = "y" ]; then suffix="[Y/n]"; else suffix="[y/N]"; fi
@@ -91,9 +110,11 @@ fi
 
 echo "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches/resources) =="
 # Reset every tree the overlay touches back to HEAD before re-applying — including the ROOT files
-# some patches modify (CMakeLists.txt <- 0007, version.inc <- 0001); otherwise a prior apply_overlay
-# leaves them dirty vs the index and `git apply` fails "does not match index".
-git checkout -- src resources CMakeLists.txt version.inc 2>/dev/null || true
+# some patches modify (CMakeLists.txt <- 0008, version.inc <- 0001). `git reset` first in case a
+# prior `git apply --3way` left the index dirty (checkout restores from the index, not HEAD, so a
+# dirty index would silently reintroduce stale overlay content instead of true pristine).
+git reset -q -- src resources CMakeLists.txt version.inc 2>/dev/null || true
+git checkout HEAD -- src resources CMakeLists.txt version.inc 2>/dev/null || true
 bash "$REPO/cubicon/scripts/apply_overlay.sh"
 
 DEPS_MARK="deps/build/$ARCH/OrcaSlicer_dep"

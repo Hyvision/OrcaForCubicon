@@ -1,0 +1,24 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8dcd4cf004..d31776bca4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -486,8 +486,17 @@ if (SLIC3R_ASAN)
+ endif ()
+ 
+ if (APPLE)
+-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Werror=unguarded-availability-new")
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Werror=unguarded-availability-new")
++    # -Wunguarded-availability-new false-positives from merely #include-ing system
++    # headers (Cocoa/AppKit/CoreGraphics) when building against a newer SDK (e.g.
++    # macOS 26 SDK) with an old deployment target: it flags Apple's own header
++    # declarations (e.g. NSBezierPathElementCubicCurveTo, CGToneMapping), not
++    # actual API usage in this project, so it can't be fixed with @available
++    # guards in our code. -Wno-error= (not just dropping -Werror=) is required
++    # because -Wunguarded-availability-new is a sub-group of -Wunguarded-availability,
++    # so -Werror=unguarded-availability alone still promotes it. The non-"-new"
++    # variant (which only fires on real project-code usage) stays fatal.
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Wno-error=unguarded-availability-new")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Wno-error=unguarded-availability-new")
+ endif ()
+ 
+ if(MSVC)
