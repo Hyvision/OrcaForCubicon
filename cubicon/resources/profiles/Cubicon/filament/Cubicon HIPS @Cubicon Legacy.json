@@ -26,5 +26,8 @@
     "filament_type": [
         "HIPS"
     ],
-    "filament_id": "P510cff1"
+    "filament_id": "P510cff1",
+    "filament_vendor": [
+        "Cubicon"
+    ]
 }

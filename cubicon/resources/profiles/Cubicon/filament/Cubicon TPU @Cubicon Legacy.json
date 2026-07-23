@@ -26,5 +26,8 @@
     "filament_type": [
         "TPU"
     ],
-    "filament_id": "P510cff0"
+    "filament_id": "P510cff0",
+    "filament_vendor": [
+        "Cubicon"
+    ]
 }

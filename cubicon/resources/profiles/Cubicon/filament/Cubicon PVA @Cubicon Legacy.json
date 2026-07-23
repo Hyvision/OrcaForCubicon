@@ -26,5 +26,8 @@
     "filament_type": [
         "PVA"
     ],
-    "filament_id": "P510cff2"
+    "filament_id": "P510cff2",
+    "filament_vendor": [
+        "Cubicon"
+    ]
 }
