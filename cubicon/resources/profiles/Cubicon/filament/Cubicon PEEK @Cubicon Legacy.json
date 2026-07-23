@@ -1,0 +1,33 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon PEEK @Cubicon Legacy",
+    "compatible_printers": [
+        "Cubicon DIO Dual Plus 0.4 nozzle"
+    ],
+    "inherits": "fdm_filament_common",
+    "filament_vendor": [
+        "Cubicon"
+    ],
+    "filament_id": "P510cff4",
+    "filament_type": [
+        "PEEK"
+    ],
+    "nozzle_temperature": [
+        "400"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "400"
+    ],
+    "hot_plate_temp": [
+        "143"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "143"
+    ],
+    "fan_max_speed": [
+        "100"
+    ]
+}

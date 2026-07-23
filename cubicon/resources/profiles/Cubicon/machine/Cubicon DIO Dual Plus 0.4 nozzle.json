@@ -10,7 +10,7 @@
     "printer_technology": "FFF",
     "printer_structure": "undefine",
     "gcode_flavor": "repetier",
-    "use_relative_e_distances": "0",
+    "use_relative_e_distances": "1",
     "single_extruder_multi_material": "0",
     "machine_start_gcode": "G92 E0\n; Home\nM117 Printing...",
     "machine_end_gcode": "M104 S0\nM140 S0\nM904\nM117 Print completed! \nM84",

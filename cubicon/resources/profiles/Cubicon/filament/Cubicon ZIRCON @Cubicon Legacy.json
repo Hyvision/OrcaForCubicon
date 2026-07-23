@@ -1,0 +1,33 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon ZIRCON @Cubicon Legacy",
+    "compatible_printers": [
+        "Cubicon DIO Dual Plus 0.4 nozzle"
+    ],
+    "inherits": "fdm_filament_common",
+    "filament_vendor": [
+        "Cubicon"
+    ],
+    "filament_id": "P510cffb",
+    "filament_type": [
+        "ZIRCON"
+    ],
+    "nozzle_temperature": [
+        "130"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "130"
+    ],
+    "hot_plate_temp": [
+        "90"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "90"
+    ],
+    "fan_max_speed": [
+        "100"
+    ]
+}

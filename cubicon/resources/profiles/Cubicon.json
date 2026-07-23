@@ -279,6 +279,46 @@
         {
             "name": "Cubicon PA @Cubicon Legacy",
             "sub_path": "filament/Cubicon PA @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon PEEK @Cubicon Legacy",
+            "sub_path": "filament/Cubicon PEEK @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon PEEK-K10 @Cubicon Legacy",
+            "sub_path": "filament/Cubicon PEEK-K10 @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon AQUASYS-120 @Cubicon Legacy",
+            "sub_path": "filament/Cubicon AQUASYS-120 @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon AQUASYS-180 @Cubicon Legacy",
+            "sub_path": "filament/Cubicon AQUASYS-180 @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon AQUASYS-GP @Cubicon Legacy",
+            "sub_path": "filament/Cubicon AQUASYS-GP @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon VXL-111 @Cubicon Legacy",
+            "sub_path": "filament/Cubicon VXL-111 @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon PAHT-CF @Cubicon Legacy",
+            "sub_path": "filament/Cubicon PAHT-CF @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon ZIRCON @Cubicon Legacy",
+            "sub_path": "filament/Cubicon ZIRCON @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon SUS304 @Cubicon Legacy",
+            "sub_path": "filament/Cubicon SUS304 @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon SUS316L @Cubicon Legacy",
+            "sub_path": "filament/Cubicon SUS316L @Cubicon Legacy.json"
         }
     ],
     "machine_list": [
