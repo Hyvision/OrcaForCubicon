@@ -15,10 +15,14 @@
         {
             "name": "Cubicon xCeler-Mini",
             "sub_path": "machine/Cubicon xCeler-Mini.json"
+        },
+        {
+            "name": "Cubicon DIO Dual Plus",
+            "sub_path": "machine/Cubicon DIO Dual Plus.json"
         }
     ],
     "process_list": [
-		{
+        {
             "name": "fdm_process_common",
             "sub_path": "process/fdm_process_common.json"
         },
@@ -45,30 +49,34 @@
         {
             "name": "cubicon default @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "process/cubicon default @Cubicon xCeler-Mini 0.4 nozzle.json"
+        },
+        {
+            "name": "cubicon default @Cubicon DIO Dual Plus 0.4 nozzle",
+            "sub_path": "process/cubicon default @Cubicon DIO Dual Plus 0.4 nozzle.json"
         }
     ],
     "filament_list": [
-		{
+        {
             "name": "fdm_filament_common",
             "sub_path": "filament/fdm_filament_common.json"
         },
-		{
+        {
             "name": "fdm_filament_pla",
             "sub_path": "filament/fdm_filament_pla.json"
         },
-		{
+        {
             "name": "fdm_filament_abs",
             "sub_path": "filament/fdm_filament_abs.json"
         },
-		{
+        {
             "name": "fdm_filament_pc",
             "sub_path": "filament/fdm_filament_pc.json"
         },
-		{
+        {
             "name": "fdm_filament_pet",
             "sub_path": "filament/fdm_filament_pet.json"
         },
-		{
+        {
             "name": "fdm_filament_pa",
             "sub_path": "filament/fdm_filament_pa.json"
         },
@@ -104,7 +112,6 @@
             "name": "Cubicon PLA+ @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PLA+ @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
-
         {
             "name": "Cubicon PLAi21 @base",
             "sub_path": "filament/Cubicon PLAi21 @base.json"
@@ -185,7 +192,6 @@
             "name": "Cubicon PETG @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PETG @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
-
         {
             "name": "Cubicon PC @base",
             "sub_path": "filament/Cubicon PC @base.json"
@@ -202,7 +208,6 @@
             "name": "Cubicon PC @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PC @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
-
         {
             "name": "Cubicon PA-CF @base",
             "sub_path": "filament/Cubicon PA-CF @base.json"
@@ -218,10 +223,14 @@
         {
             "name": "Cubicon PA-CF @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PA-CF @Cubicon xCeler-Mini 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PLA @Cubicon DIO Dual Plus",
+            "sub_path": "filament/Cubicon PLA @Cubicon DIO Dual Plus.json"
         }
     ],
     "machine_list": [
-		{
+        {
             "name": "fdm_machine_common",
             "sub_path": "machine/fdm_machine_common.json"
         },
@@ -236,6 +245,10 @@
         {
             "name": "Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "machine/Cubicon xCeler-Mini 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon DIO Dual Plus 0.4 nozzle",
+            "sub_path": "machine/Cubicon DIO Dual Plus 0.4 nozzle.json"
         }
     ]
 }

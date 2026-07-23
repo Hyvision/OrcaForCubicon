@@ -1,0 +1,10 @@
+{
+    "type": "machine_model",
+    "name": "Cubicon DIO Dual Plus",
+    "nozzle_diameter": "0.4",
+    "bed_model": "",
+    "bed_texture": "",
+    "family": "Cubicon",
+    "machine_tech": "FFF",
+    "default_materials": "Cubicon PLA @Cubicon DIO Dual Plus"
+}
