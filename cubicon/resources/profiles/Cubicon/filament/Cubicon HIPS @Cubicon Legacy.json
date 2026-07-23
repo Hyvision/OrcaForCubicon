@@ -1,0 +1,29 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon HIPS @Cubicon Legacy",
+    "compatible_printers": [
+        "Cubicon DIO Dual Plus 0.4 nozzle"
+    ],
+    "inherits": "fdm_filament_abs",
+    "nozzle_temperature": [
+        "240"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "240"
+    ],
+    "fan_max_speed": [
+        "50"
+    ],
+    "hot_plate_temp": [
+        "115"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "115"
+    ],
+    "filament_type": [
+        "HIPS"
+    ]
+}

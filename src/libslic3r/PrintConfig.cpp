@@ -7317,6 +7317,40 @@ void PrintConfigDef::init_fff_params()
         }
     }
 
+    // Per-filament first layer speed override.
+    // Defined as coFloats nullable OUTSIDE the auto-gen loop above (loop's switch handles only
+    // coFloats/Percents/Bools/Enums mapped from existing extruder options; adding a new scalar target
+    // like initial_layer_speed would hit default:assert). nil = no override → process value used.
+    // Override logic: PrintApply.cpp Print::apply(), before print_config_diffs().
+    def = this->add_nullable("filament_initial_layer_speed", coFloats);
+    def->label    = L("First layer speed");
+    def->tooltip  = L("Filament-specific override for the first layer (outer/perimeter) speed. "
+                      "Leave empty (N/A) to use the process value.");
+    def->sidetext = L("mm/s");
+    def->min      = 0;
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloatsNullable(std::vector<double>{ ConfigOptionFloatsNullable::nil_value() }));
+
+    def = this->add_nullable("filament_initial_layer_infill_speed", coFloats);
+    def->label    = L("First layer infill speed");
+    def->tooltip  = L("Filament-specific override for the first layer solid infill speed. "
+                      "Leave empty (N/A) to use the process value.");
+    def->sidetext = L("mm/s");
+    def->min      = 0;
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloatsNullable(std::vector<double>{ ConfigOptionFloatsNullable::nil_value() }));
+
+    // Target initial_layer_line_width is coFloatOrPercent; the override value is stored here as an
+    // absolute width (mm) and applied as ConfigOptionFloatOrPercent(value, false) in PrintApply.cpp.
+    def = this->add_nullable("filament_initial_layer_line_width", coFloats);
+    def->label    = L("First layer line width");
+    def->tooltip  = L("Filament-specific override for the first layer line width (absolute, mm). "
+                      "Leave empty (N/A) to use the process value.");
+    def->sidetext = L("mm");
+    def->min      = 0;
+    def->mode     = comAdvanced;
+    def->set_default_value(new ConfigOptionFloatsNullable(std::vector<double>{ ConfigOptionFloatsNullable::nil_value() }));
+
     def = this->add("detect_narrow_internal_solid_infill", coBool);
     def->label = L("Detect narrow internal solid infills");
     def->category = L("Strength");

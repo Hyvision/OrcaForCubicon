@@ -39,6 +39,10 @@
             "sub_path": "process/cubicon common @base.json"
         },
         {
+            "name": "cubicon legacy @base",
+            "sub_path": "process/cubicon legacy @base.json"
+        },
+        {
             "name": "cubicon default @Cubicon xCeler-I 0.4 nozzle",
             "sub_path": "process/cubicon default @Cubicon xCeler-I 0.4 nozzle.json"
         },
@@ -53,10 +57,6 @@
         {
             "name": "cubicon default @Cubicon DIO Dual Plus 0.4 nozzle",
             "sub_path": "process/cubicon default @Cubicon DIO Dual Plus 0.4 nozzle.json"
-        },
-        {
-            "name": "cubicon legacy @base",
-            "sub_path": "process/cubicon legacy @base.json"
         }
     ],
     "filament_list": [
@@ -255,6 +255,30 @@
         {
             "name": "Cubicon PC @Cubicon Legacy",
             "sub_path": "filament/Cubicon PC @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon ABSk @Cubicon Legacy",
+            "sub_path": "filament/Cubicon ABSk @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon PA-CF @Cubicon Legacy",
+            "sub_path": "filament/Cubicon PA-CF @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon TPU @Cubicon Legacy",
+            "sub_path": "filament/Cubicon TPU @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon HIPS @Cubicon Legacy",
+            "sub_path": "filament/Cubicon HIPS @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon PVA @Cubicon Legacy",
+            "sub_path": "filament/Cubicon PVA @Cubicon Legacy.json"
+        },
+        {
+            "name": "Cubicon PA @Cubicon Legacy",
+            "sub_path": "filament/Cubicon PA @Cubicon Legacy.json"
         }
     ],
     "machine_list": [

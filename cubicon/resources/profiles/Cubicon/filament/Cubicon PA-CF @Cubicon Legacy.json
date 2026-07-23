@@ -1,0 +1,26 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon PA-CF @Cubicon Legacy",
+    "compatible_printers": [
+        "Cubicon DIO Dual Plus 0.4 nozzle"
+    ],
+    "inherits": "Cubicon PA-CF @base",
+    "nozzle_temperature": [
+        "260"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "260"
+    ],
+    "fan_max_speed": [
+        "0"
+    ],
+    "hot_plate_temp": [
+        "80"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "80"
+    ]
+}

@@ -777,6 +777,9 @@ private:
     bool            select_language();
 
     bool            config_wizard_startup();
+    // Cubicon: silently enable + select the Cubicon printers on first run so the (slow, all-vendor)
+    // config wizard can be skipped. Returns false if no Cubicon printers are bundled.
+    bool            install_cubicon_default_printers();
 	void            check_updates(const bool verbose);
 
     // select or add MachineObject
