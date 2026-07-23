@@ -3,12 +3,11 @@
     "instantiation": "true",
     "version": "1.0.0.0",
     "from": "system",
-    "name": "Cubicon PLA @Cubicon DIO Dual Plus",
+    "name": "Cubicon PLAi21 @Cubicon Legacy",
     "compatible_printers": [
         "Cubicon DIO Dual Plus 0.4 nozzle"
     ],
-    "inherits": "Cubicon PLA @base",
-
+    "inherits": "Cubicon PLAi21 @base",
     "nozzle_temperature": [
         "210"
     ],
@@ -20,5 +19,8 @@
     ],
     "hot_plate_temp_initial_layer": [
         "65"
+    ],
+    "fan_max_speed": [
+        "100"
     ]
 }
