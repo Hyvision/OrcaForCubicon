@@ -1,0 +1,26 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon PETG @Cubicon Legacy",
+    "compatible_printers": [
+        "Cubicon DIO Dual Plus 0.4 nozzle"
+    ],
+    "inherits": "Cubicon PETG @base",
+    "nozzle_temperature": [
+        "240"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "240"
+    ],
+    "hot_plate_temp": [
+        "80"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "80"
+    ],
+    "fan_max_speed": [
+        "100"
+    ]
+}
