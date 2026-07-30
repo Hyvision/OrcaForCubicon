@@ -56,5 +56,6 @@ __pycache__/
 # OrcaForCubicon build/packaging outputs
 /dist/
 installer/windows/redist/vc_redist.x64.exe
+installer/windows/redist/MicrosoftEdgeWebview2Setup.exe
 # Built NSIS installers (large; keep out of git wherever makensis wrote them)
 installer/windows/*Setup*.exe

@@ -23,6 +23,22 @@ New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 Write-Host "== Staging VC++/UCRT runtime DLLs app-local ==" -ForegroundColor Cyan
 & (Join-Path $repo "installer/windows/CopyRuntime.ps1") -StageDir $stage -RedistDir $redist
 
+# Ensure the Microsoft Edge WebView2 Evergreen bootstrapper is bundled. The installer runs it
+# only when the target PC lacks the WebView2 Runtime; without it the config wizard / WebView
+# panels show a blank page. Small (~2 MB) online bootstrapper; downloaded once, then reused.
+$wv2 = Join-Path $redist "MicrosoftEdgeWebview2Setup.exe"
+if (-not (Test-Path $wv2)) {
+    Write-Host "== Downloading WebView2 Evergreen bootstrapper ==" -ForegroundColor Cyan
+    New-Item -ItemType Directory -Force -Path $redist | Out-Null
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $wv2 -UseBasicParsing
+        Write-Host "  saved $wv2"
+    } catch {
+        Write-Warning "WebView2 bootstrapper download failed: $($_.Exception.Message). Installer will skip the WebView2 install step."
+    }
+}
+
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"   # wall-clock build time -> installer filename
 
 Write-Host "== Building NSIS installer (stamp $stamp) ==" -ForegroundColor Cyan

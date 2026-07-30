@@ -70,6 +70,7 @@ VIAddVersionKey ProductVersion "${PRODUCT_VERSION}"
 !include "nsProcess.nsh"
 !include "FontReg.nsh"
 !include "WinMessages.nsh"
+!include "LogicLib.nsh"
 
 !define MUI_ABORTWARNING
 !define MUI_ICON "${BRANDING_DIR}\CubicreaterOrcaTitle.ico"
@@ -164,6 +165,32 @@ Section "MainSection" SEC01
   ExecWait '"$INSTDIR\redist\vc_redist.x64.exe" /install /quiet /norestart' $0
   DetailPrint "Visual C++ Runtime installer exit code: $0"
   Delete "$INSTDIR\redist\vc_redist.x64.exe"
+
+  ; Microsoft Edge WebView2 Runtime: required by the config wizard / WebView panels.
+  ; WebView2Loader.dll is shipped app-local, but it needs the Evergreen Runtime on the machine;
+  ; on a clean PC without it the wizard shows a blank page. Install it silently if missing.
+  ; Detect via the EdgeUpdate client key (per-machine WOW6432Node, then per-user).
+  ClearErrors
+  ReadRegStr $2 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
+  ${If} $2 == ""
+    ReadRegStr $2 HKCU "SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
+  ${EndIf}
+  ${If} $2 == ""
+  ${OrIf} $2 == "0.0.0.0"
+    ${If} ${FileExists} "${__FILEDIR__}\redist\MicrosoftEdgeWebview2Setup.exe"
+      SetOutPath "$INSTDIR\redist"
+      File "${__FILEDIR__}\redist\MicrosoftEdgeWebview2Setup.exe"
+      DetailPrint "Installing Microsoft Edge WebView2 Runtime (this may take a moment)..."
+      ExecWait '"$INSTDIR\redist\MicrosoftEdgeWebview2Setup.exe" /silent /install' $0
+      DetailPrint "WebView2 Runtime installer exit code: $0"
+      Delete "$INSTDIR\redist\MicrosoftEdgeWebview2Setup.exe"
+    ${Else}
+      DetailPrint "WebView2 bootstrapper not bundled; skipping (wizard needs the WebView2 Runtime)."
+    ${EndIf}
+  ${Else}
+    DetailPrint "Microsoft Edge WebView2 Runtime already present (pv=$2)."
+  ${EndIf}
+
   RMDir "$INSTDIR\redist"
   SetOutPath "$INSTDIR\"
 SectionEnd
