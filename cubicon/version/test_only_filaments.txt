@@ -1,0 +1,18 @@
+# Test-only filaments — included in TEST builds, EXCLUDED from RELEASE builds.
+#
+# One filament name (or name prefix) per line. A line matches a filament whose name
+# equals the line exactly, OR starts with "<line> @" (i.e. its per-machine variants).
+# For a family, list the family name once (covers @base and every @Cubicon ... variant).
+# If a family has a dedicated inherited base (fdm_filament_*), list that base too so it
+# is not left orphaned in a release build.
+#
+# Workflow:
+#   - Adding a new UNVERIFIED filament for testing: add its files + Cubicon.json entries
+#     as usual, then add its family name here. TEST builds show it; RELEASE builds omit it.
+#   - When the filament is verified for shipping: delete its line here (that's all).
+#
+# Lines starting with '#' and blank lines are ignored.
+
+Cubicon Rainbow PLA HS
+Cubicon TPU-HS
+fdm_filament_tpu

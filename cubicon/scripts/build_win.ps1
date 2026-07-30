@@ -122,6 +122,15 @@ if ($effVer -ne $rawVer) {
     Write-Host ("Build type: {0} -> version '{1}'" -f $BuildType.ToUpper(), $effVer) -ForegroundColor DarkGray
 }
 
+# ---- Release-only: drop unverified "test-only" filaments (cubicon/version/test_only_filaments.txt)
+# from the generated resources/ tree so they ship in TEST builds but not RELEASE builds. This edits
+# the build copy only (regenerated from the overlay each build); the SSOT under cubicon/resources
+# keeps every filament. TEST builds skip this and include everything.
+if ($BuildType -eq 'release') {
+    Write-Host "== [1b/5] Release: pruning test-only filaments ==" -ForegroundColor Cyan
+    & "$repo/cubicon/scripts/prune_test_filaments.ps1" -RepoRoot $repo
+}
+
 try {
 
 if ($optDeps -or -not (Test-Path $depOut)) {
