@@ -1,5 +1,6 @@
 {
     "type": "machine",
+    "version": "1.5.0",
     "name": "Cubicon xCeler-I 0.4 nozzle",
     "inherits": "fdm_machine_common",
     "from": "system",
@@ -88,20 +89,20 @@
         "13000"
     ],
     "machine_max_jerk_e": [
-        "20",
-        "20"
+        "2.5",
+        "2.5"
     ],
     "machine_max_jerk_x": [
-        "20",
-        "20"
+        "5",
+        "5"
     ],
     "machine_max_jerk_y": [
-        "20",
-        "20"
+        "5",
+        "5"
     ],
     "machine_max_jerk_z": [
-        "20",
-        "20"
+        "2",
+        "2"
     ],
     "machine_max_junction_deviation": [
         "0",

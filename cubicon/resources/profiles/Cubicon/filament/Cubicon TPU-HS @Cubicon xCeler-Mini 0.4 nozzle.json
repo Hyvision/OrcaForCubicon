@@ -1,0 +1,13 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+
+    "compatible_printers": [
+        "Cubicon xCeler-Mini 0.4 nozzle"
+    ],
+
+    "inherits": "Cubicon TPU-HS @base",
+    "name": "Cubicon TPU-HS @Cubicon xCeler-Mini 0.4 nozzle",
+    "filament_settings_id": ["Cubicon TPU-HS @Cubicon xCeler-Mini 0.4 nozzle"]
+}

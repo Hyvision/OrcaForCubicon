@@ -1,6 +1,6 @@
 {
     "name": "Cubicon",
-    "version": "02.03.02.00",
+    "version": "02.03.03.00",
     "force_update": "0",
     "description": "Cubicon configurations",
     "machine_model_list": [
@@ -71,6 +71,10 @@
 		{
             "name": "fdm_filament_pa",
             "sub_path": "filament/fdm_filament_pa.json"
+        },
+		{
+            "name": "fdm_filament_tpu",
+            "sub_path": "filament/fdm_filament_tpu.json"
         },
         {
             "name": "Cubicon PLA @base",
@@ -218,6 +222,38 @@
         {
             "name": "Cubicon PA-CF @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PA-CF @Cubicon xCeler-Mini 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon TPU-HS @base",
+            "sub_path": "filament/Cubicon TPU-HS @base.json"
+        },
+        {
+            "name": "Cubicon TPU-HS @Cubicon xCeler-I 0.4 nozzle",
+            "sub_path": "filament/Cubicon TPU-HS @Cubicon xCeler-I 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon TPU-HS @Cubicon xCeler-Plus 0.4 nozzle",
+            "sub_path": "filament/Cubicon TPU-HS @Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon TPU-HS @Cubicon xCeler-Mini 0.4 nozzle",
+            "sub_path": "filament/Cubicon TPU-HS @Cubicon xCeler-Mini 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon Rainbow PLA HS @base",
+            "sub_path": "filament/Cubicon Rainbow PLA HS @base.json"
+        },
+        {
+            "name": "Cubicon Rainbow PLA HS @Cubicon xCeler-I 0.4 nozzle",
+            "sub_path": "filament/Cubicon Rainbow PLA HS @Cubicon xCeler-I 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon Rainbow PLA HS @Cubicon xCeler-Plus 0.4 nozzle",
+            "sub_path": "filament/Cubicon Rainbow PLA HS @Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon Rainbow PLA HS @Cubicon xCeler-Mini 0.4 nozzle",
+            "sub_path": "filament/Cubicon Rainbow PLA HS @Cubicon xCeler-Mini 0.4 nozzle.json"
         }
     ],
     "machine_list": [
