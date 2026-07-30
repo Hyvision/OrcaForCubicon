@@ -1,0 +1,130 @@
+diff --git a/src/slic3r/GUI/GUI_App.cpp b/src/slic3r/GUI/GUI_App.cpp
+index 5673304607..3ddb8d9323 100644
+--- a/src/slic3r/GUI/GUI_App.cpp
++++ b/src/slic3r/GUI/GUI_App.cpp
+@@ -940,7 +940,9 @@ void GUI_App::post_init()
+                 this->preset_updater->sync(http_url, language, network_ver, sys_preset ? preset_bundle : nullptr);
+             }
+ 
+-            this->check_new_version_sf();
++            // Cubicon: use the OrcaForCubicon update check (its own GitHub releases + product
++            // version), not OrcaSlicer's check_new_version_sf().
++            this->check_new_version_cubicon();
+             const auto cloud_provider = get_printer_cloud_provider();
+             if (is_user_login(cloud_provider) && !app_config->get_stealth_mode()) {
+               // this->check_privacy_version(0);
+@@ -5758,6 +5760,86 @@ void GUI_App::check_new_version_sf(bool show_tips, int by_user)
+     http.perform();
+ }
+ 
++// Cubicon: OrcaForCubicon-specific update check. Replaces OrcaSlicer's check_new_version_sf().
++// Queries the OrcaForCubicon GitHub "latest release" endpoint — GitHub's /releases/latest returns
++// only the newest published, non-draft, non-prerelease release, so rc/pre-releases are ignored
++// (stable-only). The tag is compared against the product version CUBI_ORCA_VERSION (e.g. "1.5.0"),
++// NOT the upstream Orca SoftFever_VERSION. When newer, it reuses the existing
++// EVT_SLIC3R_VERSION_ONLINE -> UpdateVersionDialog popup (Download / Skip / Cancel); "Download"
++// opens the release page in the default browser.
++void GUI_App::check_new_version_cubicon(bool show_tips, int by_user)
++{
++    (void) show_tips;
++    const std::string version_check_url = "https://api.github.com/repos/Hyvision/OrcaForCubicon/releases/latest";
++
++    auto http = Http::get(version_check_url);
++    http.header("accept", "application/vnd.github.v3+json")
++        .timeout_connect(5)
++        .timeout_max(10)
++        .on_error([](std::string body, std::string error, unsigned http_status) {
++            (void) body;
++            BOOST_LOG_TRIVIAL(error) << format("Error getting: `%1%`: HTTP %2%, %3%",
++                                               "check_new_version_cubicon", http_status, error);
++        })
++        .on_complete([this, by_user](std::string body, unsigned http_status) {
++            if (http_status != 200)
++                return;
++            try {
++                boost::trim(body);
++                if (body.empty()) {
++                    if (by_user != 0)
++                        this->no_new_version();
++                    return;
++                }
++
++                boost::property_tree::ptree root;
++                std::stringstream           json_stream(body);
++                boost::property_tree::read_json(json_stream, root);
++
++                auto tag_opt = root.get_optional<std::string>("tag_name");
++                if (!tag_opt) {
++                    if (by_user != 0)
++                        this->no_new_version();
++                    return;
++                }
++                std::string tag = *tag_opt;
++                if (!tag.empty() && (tag.front() == 'v' || tag.front() == 'V'))
++                    tag.erase(0, 1);
++
++                std::regex matcher("[0-9]+\\.[0-9]+(\\.[0-9]+)*(-[A-Za-z0-9]+)?(\\+[A-Za-z0-9]+)?");
++                Semver     latest_version  = get_version(tag, matcher);
++                Semver     current_version = get_version(std::string(CUBI_ORCA_VERSION), matcher);
++
++                if (!latest_version.valid()) {
++                    if (by_user != 0)
++                        this->no_new_version();
++                    return;
++                }
++                if (current_version.valid() && latest_version <= current_version) {
++                    if (by_user != 0)
++                        this->no_new_version();
++                    return;
++                }
++
++                const std::string html_url = root.get_optional<std::string>("html_url").get_value_or(std::string());
++                const std::string notes    = root.get_optional<std::string>("body").get_value_or(std::string());
++
++                version_info.url           = html_url.empty()
++                                                 ? std::string("https://github.com/Hyvision/OrcaForCubicon/releases/latest")
++                                                 : html_url;
++                version_info.version_str   = latest_version.to_string_sf();
++                version_info.description   = notes;
++                version_info.force_upgrade = false;
++
++                wxCommandEvent* evt = new wxCommandEvent(EVT_SLIC3R_VERSION_ONLINE);
++                evt->SetString(latest_version.to_string());
++                GUI::wxGetApp().QueueEvent(evt);
++            } catch (...) {}
++        });
++
++    http.perform();
++}
++
+ // return true if handled
+ bool GUI_App::process_network_msg(std::string dev_id, std::string msg)
+ {
+diff --git a/src/slic3r/GUI/GUI_App.hpp b/src/slic3r/GUI/GUI_App.hpp
+index 2260417649..a131710153 100644
+--- a/src/slic3r/GUI/GUI_App.hpp
++++ b/src/slic3r/GUI/GUI_App.hpp
+@@ -515,6 +515,9 @@ public:
+     void            check_update(bool show_tips, int by_user);
+     void            check_new_version(bool show_tips = false, int by_user = 0);
+     void            check_new_version_sf(bool show_tips = false, int by_user = 0);
++    // Cubicon: OrcaForCubicon-specific update check (replaces check_new_version_sf at the call sites).
++    // Queries the OrcaForCubicon GitHub "latest release" and compares against CUBI_ORCA_VERSION.
++    void            check_new_version_cubicon(bool show_tips = false, int by_user = 0);
+     bool            process_network_msg(std::string dev_id, std::string msg);
+     void            request_new_version(int by_user);
+     void            enter_force_upgrade();
+diff --git a/src/slic3r/GUI/MainFrame.cpp b/src/slic3r/GUI/MainFrame.cpp
+index bd78f30a2a..d4b2ec194b 100644
+--- a/src/slic3r/GUI/MainFrame.cpp
++++ b/src/slic3r/GUI/MainFrame.cpp
+@@ -2597,7 +2597,8 @@ static wxMenu* generate_help_menu()
+     // Check New Version
+     append_menu_item(helpMenu, wxID_ANY, _L("Check for Updates"), _L("Check for Updates"),
+         [](wxCommandEvent&) {
+-            wxGetApp().check_new_version_sf(true, 1);
++            // Cubicon: manual "Check for Updates" uses the OrcaForCubicon check, not OrcaSlicer's.
++            wxGetApp().check_new_version_cubicon(true, 1);
+         }, "", nullptr, []() {
+             return true;
+         });
