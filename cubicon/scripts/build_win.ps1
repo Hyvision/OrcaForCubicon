@@ -100,9 +100,14 @@ Set-Location $repo
 
 Write-Host "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches/resources) ==" -ForegroundColor Cyan
 # Reset every tree the overlay touches back to HEAD before re-applying — including the ROOT files
-# some patches modify (CMakeLists.txt <- 0007, version.inc <- 0001); otherwise a prior apply_overlay
-# leaves them dirty vs the index and `git apply` fails "does not match index".
-git checkout -- src resources CMakeLists.txt version.inc 2>$null
+# some patches modify (CMakeLists.txt <- 0007, version.inc <- 0001).
+# NOTE: use `git checkout HEAD -- ...` (resets BOTH the index and the working tree to HEAD), NOT
+# `git checkout -- ...` (which only resets the working tree FROM the index). `git apply --3way`
+# STAGES the patched files into the index on success, so a prior build leaves patched blobs staged;
+# resetting only from that polluted index reintroduces the old patched source and makes the next
+# `git apply` conflict (e.g. "Applied ... with conflicts / U src/libslic3r/utils.cpp") whenever a
+# patch changed. Resetting to HEAD guarantees a pristine tree every build.
+git checkout HEAD -- src resources CMakeLists.txt version.inc 2>$null
 & "$repo/cubicon/scripts/apply_overlay.ps1"
 
 # ---- Build type: 'release' strips the -rc suffix from the product version (cubicon_version.txt is
