@@ -12,42 +12,110 @@ index f4291d36df..3cead21ee0 100644
  #define GCODEVIEWER_APP_KEY  "OrcaSlicerGcodeViewer"
  #define GCODEVIEWER_BUILD_ID std::string("OrcaSlicer G-code Viewer-") + std::string(SLIC3R_VERSION) + std::string("-RC")
 diff --git a/src/slic3r/GUI/GUI_App.cpp b/src/slic3r/GUI/GUI_App.cpp
-index 5673304607..2a85175782 100644
+index 5673304607..cbeb825fc1 100644
 --- a/src/slic3r/GUI/GUI_App.cpp
 +++ b/src/slic3r/GUI/GUI_App.cpp
-@@ -306,8 +306,15 @@ public:
+@@ -301,13 +301,39 @@ public:
+         this->CenterOnScreen();
+ 
+         scale_font(m_font_version, 1.65f); // only scale this one since it hasnt a preloaded font like Label::Body_24;
++        scale_font(m_font_product, 1.35f); // Cubicon: product name is the largest line on the splash
+ 
+         m_bg_color = StateColor::darkModeColorFor(wxColour("#FFFFFF"));
          m_fg_color = StateColor::darkModeColorFor(wxColour("#6B6A6A"));
          bool dark_mode = m_fg_color != wxColour("#6B6A6A");
          wxSize sz  = m_window->GetClientSize();
 -        BitmapCache bmp_cache;
 -        m_logo_bmp = *bmp_cache.load_svg(dark_mode ? "splash_logo_dark" : "splash_logo", sz.GetWidth(), sz.GetHeight());
-+        // Cubicon: load the official horizontal CUBICON BI logo (raster PNG) and scale it to fit
-+        // the splash width; it is drawn centered in OnPaint. (The previous splash SVG rendered small.)
++        // Cubicon: the splash carries both brand logos side by side ("CUBICON x Orca Slicer"), as it
++        // did up to 1.4.x — the official horizontal CUBICON BI logo (raster PNG; the splash SVG
++        // rendered small) next to Orca's horizontal logo, each with its own wordmark. Both are
++        // scaled to a common height and drawn as one centered row in OnPaint.
 +        wxImage splash_img(from_u8(Slic3r::var(dark_mode ? "splash_logo_dark.png" : "splash_logo.png")), wxBITMAP_TYPE_PNG);
 +        if (splash_img.IsOk()) {
-+            const int target_w = int(sz.GetWidth() * 0.78);
-+            const int target_h = splash_img.GetHeight() * target_w / splash_img.GetWidth();
-+            splash_img.Rescale(target_w, target_h, wxIMAGE_QUALITY_HIGH);
++            BitmapCache       bmp_cache;
++            const std::string orca_name = dark_mode ? "OrcaSlicer_horizontal_dark" : "OrcaSlicer_horizontal_light";
++            double            orca_ar   = 0.;
++            if (const wxBitmap* orca = bmp_cache.load_svg(orca_name, 0, 0, false, dark_mode))
++                orca_ar = double(orca->GetWidth()) / orca->GetHeight();
++
++            // Both logos plus the two gaps around the "x" separator span 86% of the splash width.
++            const double cubi_ar = double(splash_img.GetWidth()) / splash_img.GetHeight();
++            m_logo_gap = int(sz.GetWidth() * 0.03);
++            const int logo_h = int((sz.GetWidth() * 0.86 - 2 * m_logo_gap) / (cubi_ar + orca_ar));
++            splash_img.Rescale(int(logo_h * cubi_ar), logo_h, wxIMAGE_QUALITY_HIGH);
 +            m_logo_bmp = wxBitmap(splash_img);
++
++            if (const wxBitmap* orca = orca_ar > 0. ? bmp_cache.load_svg(orca_name, 0, logo_h, false, dark_mode) : nullptr) {
++                // load_svg may hand back a HiDPI-scaled bitmap (macOS); rescale to the exact
++                // logical size so the row layout below is platform-independent.
++                wxImage orca_img = orca->ConvertToImage();
++                orca_img.Rescale(int(logo_h * orca_ar), logo_h, wxIMAGE_QUALITY_HIGH);
++                m_orca_bmp = wxBitmap(orca_img);
++            }
 +        }
  
          m_window->Bind(wxEVT_PAINT, &SplashScreen::OnPaint, this);
          m_window->Refresh();
-@@ -322,7 +329,12 @@ public:
+@@ -321,12 +347,35 @@ public:
+ 
          dc.SetBackground(wxBrush(m_bg_color));
          dc.Clear();
-         if (m_logo_bmp.IsOk())
+-        if (m_logo_bmp.IsOk())
 -            dc.DrawBitmap(m_logo_bmp, 0, 0, true);
-+            // Cubicon: center the CUBICON logo horizontally, placed in the upper area so the
-+            // loading text below has room.
-+            dc.DrawBitmap(m_logo_bmp,
-+                          (c_sz.GetWidth()  - m_logo_bmp.GetWidth())  / 2,
-+                          (c_sz.GetHeight() - m_logo_bmp.GetHeight()) / 3,
-+                          true);
++        if (m_logo_bmp.IsOk()) {
++            // Cubicon: draw the CUBICON and Orca logos as a single centered row separated by an
++            // "x", in the upper area so the product name and version text below have room.
++            const int row_w = m_logo_bmp.GetWidth() +
++                              (m_orca_bmp.IsOk() ? 2 * m_logo_gap + m_orca_bmp.GetWidth() : 0);
++            const int x     = (c_sz.GetWidth()  - row_w)                  / 2;
++            const int y     = (c_sz.GetHeight() - m_logo_bmp.GetHeight()) / 3;
++            dc.DrawBitmap(m_logo_bmp, x, y, true);
++            if (m_orca_bmp.IsOk()) {
++                dc.SetFont(m_font_action);
++                dc.SetTextForeground(m_fg_color);
++                const wxSize sep_sz = dc.GetTextExtent("x");
++                dc.DrawText("x", x + m_logo_bmp.GetWidth() + (2 * m_logo_gap - sep_sz.GetWidth()) / 2,
++                                 y + (m_logo_bmp.GetHeight() - sep_sz.GetHeight()) / 2);
++                dc.DrawBitmap(m_orca_bmp, x + m_logo_bmp.GetWidth() + 2 * m_logo_gap, y, true);
++            }
++        }
  
          wxRect rc = wxRect(0, 0, c_sz.GetWidth(), 0);
          dc.SetTextForeground(m_fg_color);
-@@ -2872,7 +2884,9 @@ bool GUI_App::on_init_inner()
+ 
++        // Cubicon: product name between the brand row and the version line.
++        dc.SetFont(m_font_product);
++        dc.SetTextForeground(m_product_color);
++        rc.y      = c_sz.GetHeight() * 0.52;
++        rc.height = dc.GetTextExtent(m_text_product).GetHeight();
++        dc.DrawLabel(m_text_product, rc, wxALIGN_CENTER);
++        dc.SetTextForeground(m_fg_color);
++
+         dc.SetFont(m_font_version);
+         rc.y      = c_sz.GetHeight() * 0.72;
+         rc.height = dc.GetTextExtent(m_text_version).GetHeight();
+@@ -381,14 +430,19 @@ public:
+ 
+ private:
+     wxBitmap m_logo_bmp;
++    wxBitmap m_orca_bmp;     // Cubicon: Orca's horizontal logo, drawn next to the CUBICON logo
++    int      m_logo_gap = 0; // gap between the two logos; also hosts the "x" separator
+     wxColour m_fg_color;
+     wxColour m_bg_color;
++    wxColour m_product_color = StateColor::darkModeColorFor(wxColour("#009688")); // Cubicon: product name
+ 
+     wxString m_text_version = GUI_App::format_display_version();
+     wxString m_text_action  = _L("Loading configuration") + dots;
++    wxString m_text_product = SLIC3R_APP_FULL_NAME; // Cubicon: product name shown under the logos
+ 
+     wxFont m_font_version = Label::Body_16;
+     wxFont m_font_action  = Label::Body_16;
++    wxFont m_font_product = Label::Head_24;
+ };
+ 
+ #ifdef __linux__
+@@ -2872,7 +2926,9 @@ bool GUI_App::on_init_inner()
  
      // Orca: use wxWeakRef to provent wild pointer.
      wxWeakRef<SplashScreen> scrn = nullptr;
@@ -58,7 +126,7 @@ index 5673304607..2a85175782 100644
          // Detect position (display) to show the splash screen
          // Now this position is equal to the mainframe position
          wxPoint splashscreen_pos = wxDefaultPosition;
-@@ -6020,7 +6034,10 @@ std::string GUI_App::format_display_version()
+@@ -6020,7 +6076,10 @@ std::string GUI_App::format_display_version()
  {
      if (!version_display.empty()) return version_display;
  
@@ -70,7 +138,7 @@ index 5673304607..2a85175782 100644
      return version_display;
  }
  
-@@ -7514,6 +7531,14 @@ bool GUI_App::load_language(wxString language, bool initial)
+@@ -7514,6 +7573,14 @@ bool GUI_App::load_language(wxString language, bool initial)
  	    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(from_u8(localization_dir()));
      	// Get the active language from PrusaSlicer.ini, or empty string if the key does not exist.
          language = app_config->get("language");
@@ -85,7 +153,7 @@ index 5673304607..2a85175782 100644
          if (! language.empty())
          	BOOST_LOG_TRIVIAL(info) << boost::format("language provided by OrcaSlicer.conf: %1%") % language;
          else {
-@@ -9131,9 +9156,51 @@ void GUI_App::window_pos_center(wxTopLevelWindow *window)
+@@ -9131,9 +9198,51 @@ void GUI_App::window_pos_center(wxTopLevelWindow *window)
      }
  }
  
