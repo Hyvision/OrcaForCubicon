@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # build_mac.sh — one-command OrcaForCubicon macOS build + package.
 # Assumes the repo is already git-updated. Produces OrcaForCubicon.app and (by default) a DMG
-# with an auto version + timestamp filename:  dist/OrcaForCubicon_<ver>_macOS_<arch>_<yyyymmdd_HHMMSS>.dmg
+# with an auto version + timestamp filename:
+#   installer/macos/OrcaForCubicon_<ver>_macOS_<arch>_<yyyymmdd_HHMMSS>.dmg
 #
 # Run with no flags -> INTERACTIVE: asks each option in turn (Enter = default, number = pick).
 # Flags override the corresponding prompt default; -y skips all prompts (for CI / piped runs).
@@ -11,6 +12,8 @@
 #   -D            force-rebuild dependencies (otherwise reused if present)
 #   -P            skip packaging (stop after the .app build)
 #   -t <ver>      macOS deployment target (default 11.3)
+#   -b <type>     test (default, keeps -rc suffix) | release (strips -rc suffix + prunes
+#                 test-only filaments) — mirrors build_win.ps1's -BuildType
 #   -y            non-interactive: use flags/defaults, ask nothing
 #
 # Notes:
@@ -21,21 +24,26 @@
 set -euo pipefail
 SECONDS=0
 
-ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="11.3"; NONINTERACTIVE=0; CPU_PCT=70
-while getopts ":a:cDPt:yj:h" opt; do
+ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="11.3"; NONINTERACTIVE=0; CPU_PCT=70; BUILD_TYPE="test"
+while getopts ":a:cDPt:b:yj:h" opt; do
   case "$opt" in
     a) ARCH="$OPTARG" ;;
     c) CLEAN=1 ;;
     D) FORCE_DEPS=1 ;;
     P) SKIP_PKG=1 ;;
     t) DEPLOY_TGT="$OPTARG" ;;
+    b) BUILD_TYPE="$OPTARG" ;;
     y) NONINTERACTIVE=1 ;;
     j) CPU_PCT="$OPTARG" ;;
-    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 11.3] [-j cpu%] [-y]"; exit 0 ;;
+    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 11.3] [-b test|release] [-j cpu%] [-y]"; exit 0 ;;
     *) ;;
   esac
 done
 [ -z "$ARCH" ] && ARCH="$(uname -m)"   # arm64 on Apple Silicon, x86_64 on Intel
+case "$BUILD_TYPE" in
+  test|release) ;;
+  *) echo "!! -b must be 'test' or 'release' (got '$BUILD_TYPE')" >&2; exit 1 ;;
+esac
 
 # CPU throttling: cap parallel build jobs to ~CPU_PCT% of the logical cores so the machine stays
 # usable. Clang has no /MP; Ninja/Xcode honor CMAKE_BUILD_PARALLEL_LEVEL, so one knob caps both
@@ -102,8 +110,17 @@ if [ "$NONINTERACTIVE" -ne 1 ] && [ -t 0 ]; then
   if ask_yesno "3) 의존성(deps)을 강제로 다시 빌드할까요?" "$([ "$FORCE_DEPS" -eq 1 ] && echo y || echo n)"; then FORCE_DEPS=1; else FORCE_DEPS=0; fi
   # 4) package
   if ask_yesno "4) DMG 패키지까지 생성할까요?" "$([ "$SKIP_PKG" -eq 1 ] && echo n || echo y)"; then SKIP_PKG=0; else SKIP_PKG=1; fi
+  # 5) build type
+  read -r -p "5) 빌드 유형 - test(=rc 표시 유지) / release(=rc 표시 제거 + 테스트 전용 필라멘트 제외) [기본: $BUILD_TYPE]: " bt || true
+  if [ -n "${bt:-}" ]; then
+    bt="$(printf '%s' "$bt" | tr '[:upper:]' '[:lower:]')"
+    case "$bt" in
+      release|test) BUILD_TYPE="$bt" ;;
+      *) echo "  알 수 없는 값 '$bt' -> '$BUILD_TYPE' 유지" ;;
+    esac
+  fi
   echo
-  echo "요약: arch=$ARCH  clean=$([ "$CLEAN" -eq 1 ] && echo 예 || echo 아니오)  rebuild-deps=$([ "$FORCE_DEPS" -eq 1 ] && echo 예 || echo 아니오)  package=$([ "$SKIP_PKG" -eq 1 ] && echo 아니오 || echo 예)  target=$DEPLOY_TGT"
+  echo "요약: arch=$ARCH  clean=$([ "$CLEAN" -eq 1 ] && echo 예 || echo 아니오)  rebuild-deps=$([ "$FORCE_DEPS" -eq 1 ] && echo 예 || echo 아니오)  package=$([ "$SKIP_PKG" -eq 1 ] && echo 아니오 || echo 예)  target=$DEPLOY_TGT  build-type=$BUILD_TYPE"
   if ! ask_yesno "이대로 진행할까요?" "y"; then echo "취소됨."; exit 0; fi
   echo
 fi
@@ -116,6 +133,39 @@ echo "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches/resou
 git reset -q -- src resources CMakeLists.txt version.inc 2>/dev/null || true
 git checkout HEAD -- src resources CMakeLists.txt version.inc 2>/dev/null || true
 bash "$REPO/cubicon/scripts/apply_overlay.sh"
+
+# ---- Build type: 'release' strips the -rc suffix from the product version (cubicon_version.txt is
+# the single source of truth read by version.inc -> CUBI_ORCA_VERSION -> version display, splash,
+# About dialog, and the DMG name). We temporarily rewrite the file for the build and ALWAYS restore
+# it on exit below, so the committed SSOT keeps its rc marker.
+# cubicon_version.txt is under cubicon/ and is NOT reset by the `git checkout HEAD --` above.
+VER_FILE="$REPO/cubicon/version/cubicon_version.txt"
+RAW_VER="$(cat "$VER_FILE")"
+if [ "$BUILD_TYPE" = "release" ]; then
+  EFF_VER="$(printf '%s' "$RAW_VER" | sed -E 's/-rc.*$//')"
+else
+  EFF_VER="$RAW_VER"
+fi
+restore_version() {
+  printf '%s' "$RAW_VER" > "$VER_FILE"
+  echo "Restored version file to '$RAW_VER'"
+}
+if [ "$EFF_VER" != "$RAW_VER" ]; then
+  printf '%s' "$EFF_VER" > "$VER_FILE"
+  echo "Build type: RELEASE -> version '$EFF_VER' (stripped rc from '$RAW_VER')"
+  trap restore_version EXIT
+else
+  echo "Build type: $(printf '%s' "$BUILD_TYPE" | tr '[:lower:]' '[:upper:]') -> version '$EFF_VER'"
+fi
+
+# ---- Release-only: drop unverified "test-only" filaments (cubicon/version/test_only_filaments.txt)
+# from the generated resources/ tree so they ship in TEST builds but not RELEASE builds. This edits
+# the build copy only (regenerated from the overlay each build); the SSOT under cubicon/resources
+# keeps every filament. TEST builds skip this and include everything.
+if [ "$BUILD_TYPE" = "release" ]; then
+  echo "== [1b/5] Release: pruning test-only filaments =="
+  bash "$REPO/cubicon/scripts/prune_test_filaments.sh"
+fi
 
 DEPS_MARK="deps/build/$ARCH/OrcaSlicer_dep"
 if [ "$FORCE_DEPS" -eq 1 ] || [ ! -d "$DEPS_MARK" ]; then

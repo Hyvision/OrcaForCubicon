@@ -59,3 +59,5 @@ installer/windows/redist/vc_redist.x64.exe
 installer/windows/redist/MicrosoftEdgeWebview2Setup.exe
 # Built NSIS installers (large; keep out of git wherever makensis wrote them)
 installer/windows/*Setup*.exe
+# Built macOS DMG packages (large; mirrors the installer/windows ignore rule above)
+installer/macos/*.dmg

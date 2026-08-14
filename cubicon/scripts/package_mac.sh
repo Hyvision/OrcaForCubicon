@@ -8,7 +8,7 @@
 # instead of patching the build, keeping the Cubicon overlay minimal.
 #
 #   -a <arch>   arm64 (default) | x86_64 | universal   (selects build/<arch>/OrcaSlicer/OrcaSlicer.app)
-#   -o <dir>    output dir for the DMG (default: dist/)
+#   -o <dir>    output dir for the DMG (default: installer/macos/)
 set -euo pipefail
 
 ARCH=""
@@ -17,7 +17,7 @@ while getopts ":a:o:h" opt; do
   case "$opt" in
     a) ARCH="$OPTARG" ;;
     o) OUTDIR="$OPTARG" ;;
-    h) echo "Usage: package_mac.sh [-a arm64|x86_64|universal] [-o dist]"; exit 0 ;;
+    h) echo "Usage: package_mac.sh [-a arm64|x86_64|universal] [-o installer/macos]"; exit 0 ;;
     *) ;;
   esac
 done
@@ -25,7 +25,7 @@ done
 
 REPO="$(git rev-parse --show-toplevel)"
 cd "$REPO"
-[ -z "$OUTDIR" ] && OUTDIR="$REPO/dist"
+[ -z "$OUTDIR" ] && OUTDIR="$REPO/installer/macos"
 mkdir -p "$OUTDIR"
 
 VER="$(tr -d '[:space:]' < cubicon/version/cubicon_version.txt)"   # SSOT, e.g. 1.5.0-rc1
