@@ -68,7 +68,7 @@
     "skirt_height": "1",
     "skirt_speed": "50",
     "skirt_start_angle": "-135",
-    "sparse_infill_density": "20",
+    "sparse_infill_density": "15",
     "sparse_infill_speed": "270",
     "sparse_infill_pattern": "zigzag",
     "support_angle": "0",
