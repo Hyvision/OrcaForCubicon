@@ -1184,35 +1184,6 @@ Print::ApplyStatus Print::apply(const Model &model, DynamicPrintConfig new_full_
     auto opt_filament_map = new_full_config.option<ConfigOptionInts>("filament_map");
     std::vector<int> filament_maps = opt_filament_map ? opt_filament_map->values : std::vector<int>();
 
-    // Per-filament first layer speed override.
-    // initial_layer_speed / initial_layer_infill_speed are global scalars (coFloat), so they cannot use
-    // the standard per-extruder filament override path (which requires coFloats vector targets).
-    // Policy: use the first non-nil extruder value. Single-extruder machines use index 0.
-    {
-        auto override_first_layer = [&](const char* filament_key, const char* print_key) {
-            if (auto* o = new_full_config.option<ConfigOptionFloatsNullable>(filament_key)) {
-                for (size_t i = 0; i < o->size(); ++i) {
-                    if (!o->is_nil(i)) {
-                        new_full_config.set_key_value(print_key, new ConfigOptionFloat(o->get_at(i)));
-                        break;
-                    }
-                }
-            }
-        };
-        override_first_layer("filament_initial_layer_speed",        "initial_layer_speed");
-        override_first_layer("filament_initial_layer_infill_speed", "initial_layer_infill_speed");
-
-        // initial_layer_line_width is coFloatOrPercent; store the override as an absolute width (mm).
-        if (auto* o = new_full_config.option<ConfigOptionFloatsNullable>("filament_initial_layer_line_width")) {
-            for (size_t i = 0; i < o->size(); ++i) {
-                if (!o->is_nil(i)) {
-                    new_full_config.set_key_value("initial_layer_line_width", new ConfigOptionFloatOrPercent(o->get_at(i), false));
-                    break;
-                }
-            }
-        }
-    }
-
     // Find modified keys of the various configs. Resolve overrides extruder retract values by filament profiles.
     DynamicPrintConfig   filament_overrides;
     //BBS: add plate index

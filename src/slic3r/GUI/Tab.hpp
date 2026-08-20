@@ -472,11 +472,6 @@ public:
 	void		clear_pages() override;
 	bool 		supports_printer_technology(const PrinterTechnology tech) const override { return tech == ptFFF; }
 
-	// Cubicon: mirror the per-filament first layer speed override into the Process fields, and
-	// route edits of those fields back into the active filament's override (shared editing).
-	void		update_first_layer_speed_override_ui();
-	void		on_value_change(const std::string& opt_key, const boost::any& value) override;
-
 private:
 	ogStaticText*	m_recommended_thin_wall_thickness_description_line = nullptr;
 	ogStaticText*	m_top_bottom_shell_thickness_explanation = nullptr;

@@ -515,9 +515,6 @@ public:
     void            check_update(bool show_tips, int by_user);
     void            check_new_version(bool show_tips = false, int by_user = 0);
     void            check_new_version_sf(bool show_tips = false, int by_user = 0);
-    // Cubicon: OrcaForCubicon-specific update check (replaces check_new_version_sf at the call sites).
-    // Queries the OrcaForCubicon GitHub "latest release" and compares against CUBI_ORCA_VERSION.
-    void            check_new_version_cubicon(bool show_tips = false, int by_user = 0);
     bool            process_network_msg(std::string dev_id, std::string msg);
     void            request_new_version(int by_user);
     void            enter_force_upgrade();
@@ -780,9 +777,6 @@ private:
     bool            select_language();
 
     bool            config_wizard_startup();
-    // Cubicon: silently enable + select the Cubicon printers on first run so the (slow, all-vendor)
-    // config wizard can be skipped. Returns false if no Cubicon printers are bundled.
-    bool            install_cubicon_default_printers();
 	void            check_updates(const bool verbose);
 
     // select or add MachineObject

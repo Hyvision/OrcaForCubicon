@@ -217,16 +217,14 @@ void AppConfig::set_defaults()
     if (get("camera_navigation_style").empty())
         set("camera_navigation_style", "0");
 
-    // Cubicon default 3D navigation: right-drag rotates, middle-drag pans,
-    // left-drag reserved for selection (no camera rotate). MouseAction: 0=None,1=Pan,2=Rotation.
     if (get("left_mouse_drag_action").empty())
-        set("left_mouse_drag_action", "0");
+        set("left_mouse_drag_action", "2");
 
     if (get("middle_mouse_drag_action").empty())
         set("middle_mouse_drag_action", "1");
 
     if (get("right_mouse_drag_action").empty())
-        set("right_mouse_drag_action", "2");
+        set("right_mouse_drag_action", "1");
 
     if (get("reverse_mouse_wheel_zoom").empty())
         set_bool("reverse_mouse_wheel_zoom", false);

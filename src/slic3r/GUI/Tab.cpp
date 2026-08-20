@@ -2876,113 +2876,6 @@ void TabPrint::toggle_options()
         }
         cb->SetValue(n);
     }
-
-    update_first_layer_speed_override_ui();
-}
-
-// Cubicon: per-filament first layer speed override <-> Process field bridge.
-// filament_initial_layer_speed / filament_initial_layer_infill_speed override the global
-// initial_layer_speed / initial_layer_infill_speed at slice time (see PrintApply.cpp). The two
-// values live in different presets (process vs. filament), so they are not naturally shared.
-// To avoid a confusing "displayed value != sliced value" gap, the Process field stays editable
-// and mirrors the effective value: when the active filament carries an override we display it
-// here, and edits are routed back into the filament override (see on_value_change).
-
-// Map of process key -> filament override key mirrored into the Process tab by this bridge.
-// Only the coFloat speed keys are mirrored. initial_layer_line_width is intentionally NOT bridged:
-// it is coFloatOrPercent, and mirroring it crashed on Process-tab page activation (opt_float on that
-// process field returned a null-based reference -> access violation at 0x8). Its filament override
-// still applies at slice time (PrintApply); only the Process tab does not echo the overridden value.
-static const std::vector<std::pair<std::string, std::string>> s_first_layer_speed_override_keys = {
-    { "initial_layer_speed",        "filament_initial_layer_speed" },
-    { "initial_layer_infill_speed", "filament_initial_layer_infill_speed" },
-};
-
-// Returns the override value for print_key if the current filament overrides it, else false.
-static bool filament_first_layer_override(const DynamicPrintConfig& fila_cfg,
-                                          const std::string& fila_key, double& out_val)
-{
-    if (auto* opt = fila_cfg.option<ConfigOptionFloatsNullable>(fila_key)) {
-        for (size_t i = 0; i < opt->size(); ++i)
-            if (!opt->is_nil(i)) { out_val = opt->get_at(i); return true; }
-    }
-    return false;
-}
-
-void TabPrint::update_first_layer_speed_override_ui()
-{
-    // Only the main Process tab bridges to the filament override (not the per-object model tabs).
-    if (m_type != Preset::TYPE_PRINT || !m_active_page || !m_config || !m_preset_bundle)
-        return;
-
-    const Preset&             fila_preset = m_preset_bundle->filaments.get_edited_preset();
-    const DynamicPrintConfig& fila_cfg    = fila_preset.config;
-
-    for (const auto& [print_key, fila_key] : s_first_layer_speed_override_keys) {
-        Field* field = m_active_page->get_field(print_key);
-        // Skip if the field's control isn't created yet (early UI init, before window is set) or the
-        // process config lacks the key: set_value() would dereference a null text control (text_ctrl()
-        // on a null window) / a null option otherwise.
-        if (!field || !field->getWindow() || !m_config->has(print_key))
-            continue;
-
-        double override_val = 0.;
-        if (filament_first_layer_override(fila_cfg, fila_key, override_val)) {
-            // Show the effective (filament) value; the field remains editable and edits are
-            // routed into the filament override by on_value_change().
-            field->set_value(double_to_string(override_val), false);
-            if (wxWindow* win = field->getWindow())
-                win->SetToolTip(format_wxstr(
-                    _L("This value comes from the current filament \"%1%\" (first layer speed override).\n"
-                       "Editing it here updates the filament override, not the process preset."),
-                    from_u8(fila_preset.name)));
-        } else {
-            // No override: restore the plain process value and the standard tooltip.
-            field->set_value(double_to_string(m_config->opt_float(print_key)), false);
-            if (wxWindow* win = field->getWindow())
-                win->SetToolTip(field->get_tooltip_text(double_to_string(m_config->opt_float(print_key))));
-        }
-    }
-}
-
-void TabPrint::on_value_change(const std::string& opt_key, const boost::any& value)
-{
-    // Cubicon: if the edited key is a first-layer speed and the active filament overrides it,
-    // route the new value into the filament override and keep the process preset clean.
-    // Only on the main Process tab (the per-object model tabs reuse this method).
-    for (const auto& [print_key, fila_key] : s_first_layer_speed_override_keys) {
-        if (m_type != Preset::TYPE_PRINT || opt_key != print_key)
-            continue;
-
-        DynamicPrintConfig& fila_cfg = m_preset_bundle->filaments.get_edited_preset().config;
-        auto* fo = fila_cfg.option<ConfigOptionFloatsNullable>(fila_key);
-        double dummy = 0.;
-        if (!fo || !filament_first_layer_override(fila_cfg, fila_key, dummy))
-            break; // no active override -> fall through to normal handling
-
-        const double newval = m_config->opt_float(opt_key);
-        for (size_t i = 0; i < fo->values.size(); ++i)
-            if (!fo->is_nil(i))
-                fo->values[i] = newval;
-
-        // Revert the process value so editing here does not dirty the process preset; the value
-        // belongs to the filament, which is marked modified instead. get_selected_preset() is the
-        // stored (non-edited) preset, so this is the last-saved process value.
-        const DynamicPrintConfig& saved_cfg = m_presets->get_selected_preset().config;
-        if (saved_cfg.has(opt_key))
-            m_config->set_key_value(opt_key, saved_cfg.option(opt_key)->clone()); // clone preserves the option type (coFloat vs coFloatOrPercent)
-
-        update_dirty();
-        if (Tab* ft = wxGetApp().get_tab(Preset::TYPE_FILAMENT))
-            ft->update_dirty();
-        wxGetApp().plater()->update_project_dirty_from_presets();
-
-        Tab::on_value_change(opt_key, value);
-        update_first_layer_speed_override_ui();
-        return;
-    }
-
-    Tab::on_value_change(opt_key, value);
 }
 
 void TabPrint::update()
@@ -3875,14 +3768,6 @@ void TabFilament::add_filament_overrides_page()
                                         "filament_ironing_speed"
                                      })
         append_ironing_option(opt_key, extruder_idx);
-
-    // First layer overrides (Cubicon extension).
-    // Override applied in PrintApply.cpp before print_config_diffs(), not via the retraction path.
-    // N/A = no override → process value used.
-    ConfigOptionsGroupShp first_layer_optgroup = page->new_optgroup(L("First layer"), L"param_speed");
-    first_layer_optgroup->append_single_option_line("filament_initial_layer_speed");
-    first_layer_optgroup->append_single_option_line("filament_initial_layer_infill_speed");
-    first_layer_optgroup->append_single_option_line("filament_initial_layer_line_width");
 }
 
 void TabFilament::update_filament_overrides_page(const DynamicPrintConfig* printers_config)
