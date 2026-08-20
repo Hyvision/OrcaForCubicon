@@ -301,13 +301,39 @@ public:
         this->CenterOnScreen();
 
         scale_font(m_font_version, 1.65f); // only scale this one since it hasnt a preloaded font like Label::Body_24;
+        scale_font(m_font_product, 1.35f); // Cubicon: product name is the largest line on the splash
 
         m_bg_color = StateColor::darkModeColorFor(wxColour("#FFFFFF"));
         m_fg_color = StateColor::darkModeColorFor(wxColour("#6B6A6A"));
         bool dark_mode = m_fg_color != wxColour("#6B6A6A");
         wxSize sz  = m_window->GetClientSize();
-        BitmapCache bmp_cache;
-        m_logo_bmp = *bmp_cache.load_svg(dark_mode ? "splash_logo_dark" : "splash_logo", sz.GetWidth(), sz.GetHeight());
+        // Cubicon: the splash carries both brand logos side by side ("CUBICON x Orca Slicer"), as it
+        // did up to 1.4.x — the official horizontal CUBICON BI logo (raster PNG; the splash SVG
+        // rendered small) next to Orca's horizontal logo, each with its own wordmark. Both are
+        // scaled to a common height and drawn as one centered row in OnPaint.
+        wxImage splash_img(from_u8(Slic3r::var(dark_mode ? "splash_logo_dark.png" : "splash_logo.png")), wxBITMAP_TYPE_PNG);
+        if (splash_img.IsOk()) {
+            BitmapCache       bmp_cache;
+            const std::string orca_name = dark_mode ? "OrcaSlicer_horizontal_dark" : "OrcaSlicer_horizontal_light";
+            double            orca_ar   = 0.;
+            if (const wxBitmap* orca = bmp_cache.load_svg(orca_name, 0, 0, false, dark_mode))
+                orca_ar = double(orca->GetWidth()) / orca->GetHeight();
+
+            // Both logos plus the two gaps around the "x" separator span 86% of the splash width.
+            const double cubi_ar = double(splash_img.GetWidth()) / splash_img.GetHeight();
+            m_logo_gap = int(sz.GetWidth() * 0.03);
+            const int logo_h = int((sz.GetWidth() * 0.86 - 2 * m_logo_gap) / (cubi_ar + orca_ar));
+            splash_img.Rescale(int(logo_h * cubi_ar), logo_h, wxIMAGE_QUALITY_HIGH);
+            m_logo_bmp = wxBitmap(splash_img);
+
+            if (const wxBitmap* orca = orca_ar > 0. ? bmp_cache.load_svg(orca_name, 0, logo_h, false, dark_mode) : nullptr) {
+                // load_svg may hand back a HiDPI-scaled bitmap (macOS); rescale to the exact
+                // logical size so the row layout below is platform-independent.
+                wxImage orca_img = orca->ConvertToImage();
+                orca_img.Rescale(int(logo_h * orca_ar), logo_h, wxIMAGE_QUALITY_HIGH);
+                m_orca_bmp = wxBitmap(orca_img);
+            }
+        }
 
         m_window->Bind(wxEVT_PAINT, &SplashScreen::OnPaint, this);
         m_window->Refresh();
@@ -321,10 +347,33 @@ public:
 
         dc.SetBackground(wxBrush(m_bg_color));
         dc.Clear();
-        if (m_logo_bmp.IsOk())
-            dc.DrawBitmap(m_logo_bmp, 0, 0, true);
+        if (m_logo_bmp.IsOk()) {
+            // Cubicon: draw the CUBICON and Orca logos as a single centered row separated by an
+            // "x", in the upper area so the product name and version text below have room.
+            const int row_w = m_logo_bmp.GetWidth() +
+                              (m_orca_bmp.IsOk() ? 2 * m_logo_gap + m_orca_bmp.GetWidth() : 0);
+            const int x     = (c_sz.GetWidth()  - row_w)                  / 2;
+            const int y     = (c_sz.GetHeight() - m_logo_bmp.GetHeight()) / 3;
+            dc.DrawBitmap(m_logo_bmp, x, y, true);
+            if (m_orca_bmp.IsOk()) {
+                dc.SetFont(m_font_action);
+                dc.SetTextForeground(m_fg_color);
+                const wxSize sep_sz = dc.GetTextExtent("x");
+                dc.DrawText("x", x + m_logo_bmp.GetWidth() + (2 * m_logo_gap - sep_sz.GetWidth()) / 2,
+                                 y + (m_logo_bmp.GetHeight() - sep_sz.GetHeight()) / 2);
+                dc.DrawBitmap(m_orca_bmp, x + m_logo_bmp.GetWidth() + 2 * m_logo_gap, y, true);
+            }
+        }
 
         wxRect rc = wxRect(0, 0, c_sz.GetWidth(), 0);
+        dc.SetTextForeground(m_fg_color);
+
+        // Cubicon: product name between the brand row and the version line.
+        dc.SetFont(m_font_product);
+        dc.SetTextForeground(m_product_color);
+        rc.y      = c_sz.GetHeight() * 0.52;
+        rc.height = dc.GetTextExtent(m_text_product).GetHeight();
+        dc.DrawLabel(m_text_product, rc, wxALIGN_CENTER);
         dc.SetTextForeground(m_fg_color);
 
         dc.SetFont(m_font_version);
@@ -381,14 +430,19 @@ public:
 
 private:
     wxBitmap m_logo_bmp;
+    wxBitmap m_orca_bmp;     // Cubicon: Orca's horizontal logo, drawn next to the CUBICON logo
+    int      m_logo_gap = 0; // gap between the two logos; also hosts the "x" separator
     wxColour m_fg_color;
     wxColour m_bg_color;
+    wxColour m_product_color = StateColor::darkModeColorFor(wxColour("#009688")); // Cubicon: product name
 
     wxString m_text_version = GUI_App::format_display_version();
     wxString m_text_action  = _L("Loading configuration") + dots;
+    wxString m_text_product = SLIC3R_APP_FULL_NAME; // Cubicon: product name shown under the logos
 
     wxFont m_font_version = Label::Body_16;
     wxFont m_font_action  = Label::Body_16;
+    wxFont m_font_product = Label::Head_24;
 };
 
 #ifdef __linux__
@@ -940,7 +994,9 @@ void GUI_App::post_init()
                 this->preset_updater->sync(http_url, language, network_ver, sys_preset ? preset_bundle : nullptr);
             }
 
-            this->check_new_version_sf();
+            // Cubicon: use the OrcaForCubicon update check (its own GitHub releases + product
+            // version), not OrcaSlicer's check_new_version_sf().
+            this->check_new_version_cubicon();
             const auto cloud_provider = get_printer_cloud_provider();
             if (is_user_login(cloud_provider) && !app_config->get_stealth_mode()) {
               // this->check_privacy_version(0);
@@ -2872,7 +2928,9 @@ bool GUI_App::on_init_inner()
 
     // Orca: use wxWeakRef to provent wild pointer.
     wxWeakRef<SplashScreen> scrn = nullptr;
-    if (app_config->get("show_splash_screen") == "true") {
+    // Cubicon: always show the splash screen (branding), regardless of the show_splash_screen
+    // setting or a value inherited from an older config. Users cannot turn it off.
+    if (true) {
         // Detect position (display) to show the splash screen
         // Now this position is equal to the mainframe position
         wxPoint splashscreen_pos = wxDefaultPosition;
@@ -5758,6 +5816,86 @@ void GUI_App::check_new_version_sf(bool show_tips, int by_user)
     http.perform();
 }
 
+// Cubicon: OrcaForCubicon-specific update check. Replaces OrcaSlicer's check_new_version_sf().
+// Queries the OrcaForCubicon GitHub "latest release" endpoint — GitHub's /releases/latest returns
+// only the newest published, non-draft, non-prerelease release, so rc/pre-releases are ignored
+// (stable-only). The tag is compared against the product version CUBI_ORCA_VERSION (e.g. "1.5.0"),
+// NOT the upstream Orca SoftFever_VERSION. When newer, it reuses the existing
+// EVT_SLIC3R_VERSION_ONLINE -> UpdateVersionDialog popup (Download / Skip / Cancel); "Download"
+// opens the release page in the default browser.
+void GUI_App::check_new_version_cubicon(bool show_tips, int by_user)
+{
+    (void) show_tips;
+    const std::string version_check_url = "https://api.github.com/repos/Hyvision/OrcaForCubicon/releases/latest";
+
+    auto http = Http::get(version_check_url);
+    http.header("accept", "application/vnd.github.v3+json")
+        .timeout_connect(5)
+        .timeout_max(10)
+        .on_error([](std::string body, std::string error, unsigned http_status) {
+            (void) body;
+            BOOST_LOG_TRIVIAL(error) << format("Error getting: `%1%`: HTTP %2%, %3%",
+                                               "check_new_version_cubicon", http_status, error);
+        })
+        .on_complete([this, by_user](std::string body, unsigned http_status) {
+            if (http_status != 200)
+                return;
+            try {
+                boost::trim(body);
+                if (body.empty()) {
+                    if (by_user != 0)
+                        this->no_new_version();
+                    return;
+                }
+
+                boost::property_tree::ptree root;
+                std::stringstream           json_stream(body);
+                boost::property_tree::read_json(json_stream, root);
+
+                auto tag_opt = root.get_optional<std::string>("tag_name");
+                if (!tag_opt) {
+                    if (by_user != 0)
+                        this->no_new_version();
+                    return;
+                }
+                std::string tag = *tag_opt;
+                if (!tag.empty() && (tag.front() == 'v' || tag.front() == 'V'))
+                    tag.erase(0, 1);
+
+                std::regex matcher("[0-9]+\\.[0-9]+(\\.[0-9]+)*(-[A-Za-z0-9]+)?(\\+[A-Za-z0-9]+)?");
+                Semver     latest_version  = get_version(tag, matcher);
+                Semver     current_version = get_version(std::string(CUBI_ORCA_VERSION), matcher);
+
+                if (!latest_version.valid()) {
+                    if (by_user != 0)
+                        this->no_new_version();
+                    return;
+                }
+                if (current_version.valid() && latest_version <= current_version) {
+                    if (by_user != 0)
+                        this->no_new_version();
+                    return;
+                }
+
+                const std::string html_url = root.get_optional<std::string>("html_url").get_value_or(std::string());
+                const std::string notes    = root.get_optional<std::string>("body").get_value_or(std::string());
+
+                version_info.url           = html_url.empty()
+                                                 ? std::string("https://github.com/Hyvision/OrcaForCubicon/releases/latest")
+                                                 : html_url;
+                version_info.version_str   = latest_version.to_string_sf();
+                version_info.description   = notes;
+                version_info.force_upgrade = false;
+
+                wxCommandEvent* evt = new wxCommandEvent(EVT_SLIC3R_VERSION_ONLINE);
+                evt->SetString(latest_version.to_string());
+                GUI::wxGetApp().QueueEvent(evt);
+            } catch (...) {}
+        });
+
+    http.perform();
+}
+
 // return true if handled
 bool GUI_App::process_network_msg(std::string dev_id, std::string msg)
 {
@@ -6020,7 +6158,10 @@ std::string GUI_App::format_display_version()
 {
     if (!version_display.empty()) return version_display;
 
-    version_display = SoftFever_VERSION;
+    // Cubicon: show the OrcaForCubicon product version (rc suffix included so pre-releases are
+    // distinguishable) with the upstream Orca base in parentheses. Used by the splash screen and
+    // the About-dialog "copy version" action.
+    version_display = std::string(CUBI_ORCA_VERSION) + " (Orca " + SoftFever_VERSION + ")";
     return version_display;
 }
 
@@ -7514,6 +7655,14 @@ bool GUI_App::load_language(wxString language, bool initial)
 	    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(from_u8(localization_dir()));
     	// Get the active language from PrusaSlicer.ini, or empty string if the key does not exist.
         language = app_config->get("language");
+        if (language.empty()) {
+            // Cubicon: default the UI to Korean when the user has not chosen a language yet.
+            // This runs on first launch too (AppConfig::set_defaults is skipped when no config
+            // file exists), so the very first start comes up in Korean. Persisted so the user's
+            // later choice in Preferences overrides it.
+            language = "ko_KR";
+            app_config->set("language", "ko_KR");
+        }
         if (! language.empty())
         	BOOST_LOG_TRIVIAL(info) << boost::format("language provided by OrcaSlicer.conf: %1%") % language;
         else {
@@ -9131,9 +9280,51 @@ void GUI_App::window_pos_center(wxTopLevelWindow *window)
     }
 }
 
+// Cubicon: on first run, enable every bundled Cubicon printer variant in the app config so the
+// printers become visible (only_default_printers() then returns false), select one (preferring
+// xCeler-Plus), and pull in compatible process/filament — mirroring what the config wizard does
+// when a user picks a printer. Other vendors stay available via the printer dropdown / Preferences.
+bool GUI_App::install_cubicon_default_printers()
+{
+    if (!preset_bundle)
+        return false;
+
+    std::string preferred, first;
+    int enabled = 0;
+    for (const Preset& p : preset_bundle->printers.get_presets()) {
+        if (!p.vendor || p.vendor->id != "Cubicon")
+            continue;
+        const std::string model   = p.config.opt_string("printer_model");
+        const std::string variant = p.config.opt_string("printer_variant");
+        if (model.empty() || variant.empty())
+            continue;
+        app_config->set_variant("Cubicon", model, variant, true);
+        ++enabled;
+        if (first.empty())
+            first = p.name;
+        if (model == "Cubicon xCeler-Plus")
+            preferred = p.name;
+    }
+    if (enabled == 0)
+        return false; // no Cubicon printers bundled -> fall back to the normal wizard
+
+    preset_bundle->load_installed_printers(*app_config); // refresh Preset::is_visible from the config
+    const std::string& sel = preferred.empty() ? first : preferred;
+    preset_bundle->printers.select_preset_by_name(sel, true);
+    preset_bundle->update_compatible(PresetSelectCompatibleType::Always);
+    preset_bundle->export_selections(*app_config);
+    BOOST_LOG_TRIVIAL(info) << "Cubicon: seeded default printer '" << sel << "' (" << enabled
+                            << " variants enabled), skipping config wizard";
+    return true;
+}
+
 bool GUI_App::config_wizard_startup()
 {
     if (!m_app_conf_exists || preset_bundle->printers.only_default_printers()) {
+        // Cubicon: skip the slow all-vendor first-run wizard by seeding the Cubicon printers.
+        // Only fall back to the wizard if seeding fails (e.g. no Cubicon profiles present).
+        if (install_cubicon_default_printers())
+            return false;
         BOOST_LOG_TRIVIAL(info) << "run wizard...";
         run_wizard(ConfigWizard::RR_DATA_EMPTY);
         BOOST_LOG_TRIVIAL(info) << "finished run wizard";

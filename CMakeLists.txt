@@ -215,7 +215,13 @@ endif ()
 
 if (MSVC)
     if (SLIC3R_MSVC_COMPILE_PARALLEL AND NOT IS_CLANG_CL)
-           add_compile_options(/MP)
+           # Cubicon: SLIC3R_MSVC_PARALLEL_COUNT caps the /MP process count (used to throttle build
+           # CPU). Empty/unset -> bare /MP (all cores), preserving upstream behavior.
+           if (SLIC3R_MSVC_PARALLEL_COUNT)
+               add_compile_options(/MP${SLIC3R_MSVC_PARALLEL_COUNT})
+           else ()
+               add_compile_options(/MP)
+           endif ()
     endif ()
     # /bigobj (Increase Number of Sections in .Obj file)
     # error C3859: virtual memory range for PCH exceeded; please recompile with a command line option of '-Zm90' or greater
@@ -486,8 +492,17 @@ if (SLIC3R_ASAN)
 endif ()
 
 if (APPLE)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Werror=unguarded-availability-new")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Werror=unguarded-availability-new")
+    # -Wunguarded-availability-new false-positives from merely #include-ing system
+    # headers (Cocoa/AppKit/CoreGraphics) when building against a newer SDK (e.g.
+    # macOS 26 SDK) with an old deployment target: it flags Apple's own header
+    # declarations (e.g. NSBezierPathElementCubicCurveTo, CGToneMapping), not
+    # actual API usage in this project, so it can't be fixed with @available
+    # guards in our code. -Wno-error= (not just dropping -Werror=) is required
+    # because -Wunguarded-availability-new is a sub-group of -Wunguarded-availability,
+    # so -Werror=unguarded-availability alone still promotes it. The non-"-new"
+    # variant (which only fires on real project-code usage) stays fatal.
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Wno-error=unguarded-availability-new")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=partial-availability -Werror=unguarded-availability -Wno-error=unguarded-availability-new")
 endif ()
 
 if(MSVC)

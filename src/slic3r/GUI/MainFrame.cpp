@@ -2597,7 +2597,8 @@ static wxMenu* generate_help_menu()
     // Check New Version
     append_menu_item(helpMenu, wxID_ANY, _L("Check for Updates"), _L("Check for Updates"),
         [](wxCommandEvent&) {
-            wxGetApp().check_new_version_sf(true, 1);
+            // Cubicon: manual "Check for Updates" uses the OrcaForCubicon check, not OrcaSlicer's.
+            wxGetApp().check_new_version_cubicon(true, 1);
         }, "", nullptr, []() {
             return true;
         });
