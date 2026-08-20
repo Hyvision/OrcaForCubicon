@@ -1,0 +1,63 @@
+diff --git a/src/libslic3r/PresetBundle.cpp b/src/libslic3r/PresetBundle.cpp
+index 9a49e14aa3..51274a47d7 100644
+--- a/src/libslic3r/PresetBundle.cpp
++++ b/src/libslic3r/PresetBundle.cpp
+@@ -2466,9 +2466,42 @@ static inline std::string remove_ini_suffix(const std::string &name)
+ // Set the "enabled" flag for printer vendors, printer models and printer variants
+ // based on the user configuration.
+ // If the "vendor" section is missing, enable all models and variants of the particular vendor.
++// Cubicon: re-attach user printer presets that lost their "inherits" link to the system preset
++// they were derived from. Such a "detached" preset (a full standalone config with an empty
++// inherits, e.g. left behind by an older-version profile migration) makes every vendor filament
++// and process preset look incompatible: is_compatible_with_printer() matches the active printer's
++// name against the preset's compatible_printers list, and its only fallback for a user preset --
++// is_compatible_with_parent_printer() -- matches inherits(), which is empty here. The result is an
++// empty filament list and a fallback to "Default Filament"/"Default Setting".
++// The preset still carries printer_model/printer_variant, so the system parent can be identified
++// unambiguously; restoring inherits makes the existing parent fallback work again. Only presets
++// with an empty inherits are touched, so nothing that resolves today changes.
++void PresetBundle::repair_detached_user_printers()
++{
++    for (auto &preset : printers) {
++        if (preset.is_system || preset.is_default || !preset.inherits().empty())
++            continue;
++        // A user preset may be missing these keys entirely; opt_string() would dereference a null
++        // option, so check before reading.
++        if (!preset.config.has("printer_model") || !preset.config.has("printer_variant"))
++            continue;
++        const std::string &model   = preset.config.opt_string("printer_model");
++        const std::string &variant = preset.config.opt_string("printer_variant");
++        const Preset      *parent  = printers.find_system_preset_by_model_and_variant(model, variant);
++        if (parent == nullptr)
++            continue; // genuinely custom printer, leave it standalone
++        Preset::inherits(preset.config) = parent->name;
++        BOOST_LOG_TRIVIAL(info) << __FUNCTION__
++                                << boost::format(": re-attached detached user printer '%1%' to system preset '%2%'")
++                                       % preset.name % parent->name;
++    }
++}
++
+ void PresetBundle::load_installed_printers(const AppConfig &config)
+ {
+ 	this->update_system_maps();
++    // Cubicon: must run before compatibility is evaluated for filament/process presets.
++    this->repair_detached_user_printers();
+     for (auto &preset : printers)
+         preset.set_visible_from_appconfig(config);
+ }
+diff --git a/src/libslic3r/PresetBundle.hpp b/src/libslic3r/PresetBundle.hpp
+index 23ff595003..1910a9750a 100644
+--- a/src/libslic3r/PresetBundle.hpp
++++ b/src/libslic3r/PresetBundle.hpp
+@@ -458,6 +458,11 @@ public:
+     // If the "vendor" section is missing, enable all models and variants of the particular vendor.
+     void                        load_installed_printers(const AppConfig &config);
+ 
++    // Cubicon: restore the "inherits" link on user printer presets that were detached from their
++    // system parent, so vendor filament/process compatibility (which falls back to the parent's
++    // name) keeps working for duplicated printers. See the definition for the full rationale.
++    void                        repair_detached_user_printers();
++
+     const std::string&          get_preset_name_by_alias(const Preset::Type& preset_type, const std::string& alias) const;
+ 
+     const int                   get_required_hrc_by_filament_type(const std::string& filament_type) const;
