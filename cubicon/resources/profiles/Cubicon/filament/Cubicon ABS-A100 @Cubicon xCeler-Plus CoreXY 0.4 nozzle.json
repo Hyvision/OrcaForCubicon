@@ -1,0 +1,19 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "compatible_printers": [
+        "Cubicon xCeler-Plus CoreXY 0.4 nozzle"
+    ],
+    "inherits": "Cubicon ABS-A100 @base",
+    "name": "Cubicon ABS-A100 @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+    "filament_settings_id": [
+        "Cubicon ABS-A100 @Cubicon xCeler-Plus CoreXY 0.4 nozzle"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "105"
+    ],
+    "hot_plate_temp": [
+        "100"
+    ]
+}

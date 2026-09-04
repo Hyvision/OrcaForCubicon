@@ -1,6 +1,6 @@
 {
     "name": "Cubicon",
-    "version": "02.03.06.00",
+    "version": "02.03.07.00",
     "force_update": "0",
     "description": "Cubicon configurations",
     "machine_model_list": [
@@ -13,12 +13,16 @@
             "sub_path": "machine/Cubicon xCeler-Plus.json"
         },
         {
+            "name": "Cubicon xCeler-Plus CoreXY",
+            "sub_path": "machine/Cubicon xCeler-Plus CoreXY.json"
+        },
+        {
             "name": "Cubicon xCeler-Mini",
             "sub_path": "machine/Cubicon xCeler-Mini.json"
         }
     ],
     "process_list": [
-		{
+        {
             "name": "fdm_process_common",
             "sub_path": "process/fdm_process_common.json"
         },
@@ -43,36 +47,40 @@
             "sub_path": "process/cubicon default @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "cubicon default @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "process/cubicon default @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "cubicon default @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "process/cubicon default @Cubicon xCeler-Mini 0.4 nozzle.json"
         }
     ],
     "filament_list": [
-		{
+        {
             "name": "fdm_filament_common",
             "sub_path": "filament/fdm_filament_common.json"
         },
-		{
+        {
             "name": "fdm_filament_pla",
             "sub_path": "filament/fdm_filament_pla.json"
         },
-		{
+        {
             "name": "fdm_filament_abs",
             "sub_path": "filament/fdm_filament_abs.json"
         },
-		{
+        {
             "name": "fdm_filament_pc",
             "sub_path": "filament/fdm_filament_pc.json"
         },
-		{
+        {
             "name": "fdm_filament_pet",
             "sub_path": "filament/fdm_filament_pet.json"
         },
-		{
+        {
             "name": "fdm_filament_pa",
             "sub_path": "filament/fdm_filament_pa.json"
         },
-		{
+        {
             "name": "fdm_filament_tpu",
             "sub_path": "filament/fdm_filament_tpu.json"
         },
@@ -87,6 +95,10 @@
         {
             "name": "Cubicon PLA @Cubicon xCeler-Plus 0.4 nozzle",
             "sub_path": "filament/Cubicon PLA @Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PLA @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon PLA @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
         },
         {
             "name": "Cubicon PLA @Cubicon xCeler-Mini 0.4 nozzle",
@@ -105,10 +117,13 @@
             "sub_path": "filament/Cubicon PLA+ @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon PLA+ @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon PLA+ @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon PLA+ @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PLA+ @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
-
         {
             "name": "Cubicon PLAi21 @base",
             "sub_path": "filament/Cubicon PLAi21 @base.json"
@@ -120,6 +135,10 @@
         {
             "name": "Cubicon PLAi21 @Cubicon xCeler-Plus 0.4 nozzle",
             "sub_path": "filament/Cubicon PLAi21 @Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PLAi21 @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon PLAi21 @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
         },
         {
             "name": "Cubicon PLAi21 @Cubicon xCeler-Mini 0.4 nozzle",
@@ -138,6 +157,10 @@
             "sub_path": "filament/Cubicon ABS @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon ABS @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon ABS @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon ABS @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon ABS @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
@@ -152,6 +175,10 @@
         {
             "name": "Cubicon ABSk @Cubicon xCeler-Plus 0.4 nozzle",
             "sub_path": "filament/Cubicon ABSk @Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon ABSk @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon ABSk @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
         },
         {
             "name": "Cubicon ABSk @Cubicon xCeler-Mini 0.4 nozzle",
@@ -170,6 +197,10 @@
             "sub_path": "filament/Cubicon ABS-A100 @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon ABS-A100 @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon ABS-A100 @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon ABS-A100 @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon ABS-A100 @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
@@ -186,10 +217,13 @@
             "sub_path": "filament/Cubicon PETG @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon PETG @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon PETG @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon PETG @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PETG @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
-
         {
             "name": "Cubicon PC @base",
             "sub_path": "filament/Cubicon PC @base.json"
@@ -203,10 +237,13 @@
             "sub_path": "filament/Cubicon PC @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon PC @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon PC @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon PC @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon PC @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
-
         {
             "name": "Cubicon PA-CF @base",
             "sub_path": "filament/Cubicon PA-CF @base.json"
@@ -218,6 +255,10 @@
         {
             "name": "Cubicon PA-CF @Cubicon xCeler-Plus 0.4 nozzle",
             "sub_path": "filament/Cubicon PA-CF @Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PA-CF @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon PA-CF @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
         },
         {
             "name": "Cubicon PA-CF @Cubicon xCeler-Mini 0.4 nozzle",
@@ -236,6 +277,10 @@
             "sub_path": "filament/Cubicon TPU-HS @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon TPU-HS @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon TPU-HS @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon TPU-HS @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon TPU-HS @Cubicon xCeler-Mini 0.4 nozzle.json"
         },
@@ -252,12 +297,16 @@
             "sub_path": "filament/Cubicon Rainbow PLA HS @Cubicon xCeler-Plus 0.4 nozzle.json"
         },
         {
+            "name": "Cubicon Rainbow PLA HS @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "filament/Cubicon Rainbow PLA HS @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
+        },
+        {
             "name": "Cubicon Rainbow PLA HS @Cubicon xCeler-Mini 0.4 nozzle",
             "sub_path": "filament/Cubicon Rainbow PLA HS @Cubicon xCeler-Mini 0.4 nozzle.json"
         }
     ],
     "machine_list": [
-		{
+        {
             "name": "fdm_machine_common",
             "sub_path": "machine/fdm_machine_common.json"
         },
@@ -268,6 +317,10 @@
         {
             "name": "Cubicon xCeler-Plus 0.4 nozzle",
             "sub_path": "machine/Cubicon xCeler-Plus 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+            "sub_path": "machine/Cubicon xCeler-Plus CoreXY 0.4 nozzle.json"
         },
         {
             "name": "Cubicon xCeler-Mini 0.4 nozzle",

@@ -1,0 +1,13 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.5.0",
+    "compatible_printers": [
+        "Cubicon xCeler-Plus CoreXY 0.4 nozzle"
+    ],
+    "inherits": "Cubicon Rainbow PLA HS @base",
+    "name": "Cubicon Rainbow PLA HS @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+    "filament_settings_id": [
+        "Cubicon Rainbow PLA HS @Cubicon xCeler-Plus CoreXY 0.4 nozzle"
+    ]
+}
