@@ -1,6 +1,7 @@
 ﻿# build_win.ps1 — one-command OrcaForCubicon Windows build + package.
 # Assumes the repo is already git-updated. Produces the app and (by default) the NSIS installer
-# with an auto version + timestamp filename:  dist/OrcaForCubicon Setup V<ver>_<yyyymmdd_HHMMSS>.exe
+# with an auto version + timestamp filename:
+#   installer/windows/OrcaForCubicon Setup V<ver>_<yyyymmdd_HHMMSS>.exe
 #
 # Run with no flags -> INTERACTIVE: asks each option in turn (Enter = default, number = pick).
 # Flags override the corresponding prompt default; -y (or -NonInteractive) skips all prompts.
@@ -64,6 +65,50 @@ function Ask-YesNo([string]$question, [bool]$default) {
     return ($ans.Trim() -match '^[Yy]')
 }
 
+# --- Built app must not be running during install ---------------------------------------------
+# The install target copies the exe and the CRT/OCCT DLLs into build/OrcaSlicer. Windows locks a
+# loaded image, so ONE running instance out of that folder fails the copy with
+#   file INSTALL cannot copy ... msvcp140.dll ... : Permission denied   -> MSB3073 x10
+# which names a redist DLL and says nothing about the real cause (the app is open). Check for it
+# up front (before the long build) and again right before install, and say so in plain words.
+function Get-BlockingAppProcesses {
+    $buildPath = (Join-Path $repo 'build')
+    $found = @()
+    foreach ($name in @('OrcaForCubicon.exe', 'OrcaSlicer.exe')) {
+        try {
+            $found += Get-CimInstance Win32_Process -Filter "Name='$name'" -ErrorAction Stop |
+                Where-Object { $_.ExecutablePath -and
+                    $_.ExecutablePath.StartsWith($buildPath, [System.StringComparison]::OrdinalIgnoreCase) }
+        } catch {}
+    }
+    return $found
+}
+
+function Assert-AppNotRunning([string]$stage) {
+    $procs = @(Get-BlockingAppProcesses)
+    if ($procs.Count -eq 0) { return }
+    Write-Host ""
+    Write-Host ("!! 빌드 폴더의 앱이 실행 중입니다 ({0}개) - {1} 단계에서 DLL 복사가 막힙니다." -f $procs.Count, $stage) -ForegroundColor Yellow
+    foreach ($p in $procs) { Write-Host ("   PID {0}  {1}" -f $p.ProcessId, $p.ExecutablePath) -ForegroundColor Yellow }
+    $kill = $false
+    if ($interactive) { $kill = Ask-YesNo "   지금 종료할까요? (저장 안 한 작업이 있으면 먼저 저장하세요)" $true }
+    if (-not $kill) {
+        throw "built app is running - close build/OrcaSlicer/OrcaForCubicon.exe and re-run (blocked at: $stage)"
+    }
+    foreach ($p in $procs) {
+        try {
+            Stop-Process -Id $p.ProcessId -Force -ErrorAction Stop
+            Write-Host ("   PID {0} 종료됨" -f $p.ProcessId) -ForegroundColor DarkGray
+        } catch {
+            Write-Host ("   PID {0} 종료 실패: {1}" -f $p.ProcessId, $_.Exception.Message) -ForegroundColor Red
+        }
+    }
+    Start-Sleep -Milliseconds 500
+    if (@(Get-BlockingAppProcesses).Count -gt 0) {
+        throw "built app still running after the kill attempt - close it manually and re-run"
+    }
+}
+
 # --- Resolve options (defaults from flags), then prompt unless non-interactive ---
 $optClean   = [bool]$Clean
 $optDeps    = [bool]$Deps
@@ -93,6 +138,87 @@ if ($interactive) {
     if (-not (Ask-YesNo "이대로 진행할까요?" $true)) { Write-Host "취소됨." -ForegroundColor Yellow; return }
 }
 
+# --- Full build log to a file ------------------------------------------------------------------
+# A failing build prints far more than the console buffer keeps, so mirror everything to a file.
+# Started AFTER the prompts so cancelling at the summary leaves no stray log.
+#
+# NOT Start-Transcript: native processes (cmake, MSBuild, git, makensis) write to the inherited
+# stdout handle without going through PowerShell, so a transcript captures only Write-Host and
+# misses the compiler/linker errors — the one thing worth logging. It also holds the file open
+# exclusively, so nothing else can append to it. Own log + Invoke-Logged instead.
+$logFile = $null
+$logDir  = Join-Path $repo "dist/logs"     # dist/ is gitignored
+try {
+    New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+    $logFile = Join-Path $logDir ("build_win_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
+    Set-Content -LiteralPath $logFile -Encoding utf8 -Value @(
+        "OrcaForCubicon Windows build log"
+        ("date       : {0}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"))
+        ("repo       : {0}" -f $repo)
+        ("commit     : {0}" -f (git -C $repo rev-parse --short HEAD))
+        ("version    : {0}" -f (Get-Content -Raw "$repo/cubicon/version/cubicon_version.txt").Trim())
+        ("build type : {0}" -f $BuildType)
+        ("options    : clean={0} deps={1} package={2}" -f $optClean, $optDeps, $optPackage)
+        ("jobs       : {0}" -f $jobs)
+        ("-" * 78)
+    )
+    Write-Host ("Build log: {0}" -f $logFile) -ForegroundColor DarkGray
+} catch {
+    $logFile = $null
+    Write-Host ("로그 파일을 열지 못했습니다 ({0}) - 콘솔 출력만 남습니다." -f $_.Exception.Message) -ForegroundColor Yellow
+}
+
+# Proxy Write-Host so every existing status line lands in the log too, without touching the ~25
+# call sites. A function shadows the cmdlet of the same name for the rest of this script AND for
+# the sub-scripts invoked with & (they run in a child scope), so their headers are logged as well.
+function Write-Host {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0, ValueFromPipeline = $true, ValueFromRemainingArguments = $true)]$Object,
+        [switch]$NoNewline, $Separator, $ForegroundColor, $BackgroundColor
+    )
+    process {
+        Microsoft.PowerShell.Utility\Write-Host @PSBoundParameters
+        # Unqualified on purpose: when a sub-script calls this, $script: would mean THAT script's
+        # scope (no $logFile there, so nothing would be logged). The plain name walks up the scope
+        # chain to this script, where $logFile lives.
+        if ($logFile) {
+            try { Add-Content -LiteralPath $logFile -Value "$Object" -Encoding utf8 -ErrorAction Stop } catch {}
+        }
+    }
+}
+
+# Run a native EXECUTABLE (cmake, git, ...) with stdout AND stderr mirrored to the log.
+function Invoke-Logged {
+    param([Parameter(Mandatory = $true)][scriptblock]$Command)
+    if (-not $logFile) { & $Command; return }
+    # Merging native stderr into the pipeline turns each line into an ErrorRecord; under the
+    # script's $ErrorActionPreference='Stop' that throws on ordinary progress text (git and cmake
+    # both write status to stderr). Relax it at SCRIPT scope — the scriptblock's parent scope —
+    # for the duration, then restore.
+    $prev = $script:ErrorActionPreference
+    $script:ErrorActionPreference = 'Continue'
+    try { & $Command 2>&1 | ForEach-Object { Write-Host "$_" } }
+    finally { $script:ErrorActionPreference = $prev }
+}
+
+# Run a POWERSHELL SUB-SCRIPT with its stdout mirrored to the log.
+# Deliberately no 2>&1 here: a sub-script sets its own $ErrorActionPreference='Stop', which the
+# relaxation above cannot reach, so merging stderr would turn every harmless stderr line into a
+# terminating NativeCommandError inside that script — `git apply` reports even
+# "Applied patch ... cleanly." on stderr, which killed the overlay step. Their status lines are
+# Write-Host and land in the log via the proxy anyway; only their native stderr stays console-only.
+function Invoke-LoggedScript {
+    param([Parameter(Mandatory = $true)][scriptblock]$Command)
+    if (-not $logFile) { & $Command; return }
+    & $Command | ForEach-Object { Write-Host "$_" }
+}
+
+try {
+
+# Fail fast: catching an open app here costs a second; catching it at install costs a whole build.
+Assert-AppNotRunning "사전 점검"
+
 # Strawberry Perl must be FIRST for OpenSSL's Configure (msys/Git perl is rejected).
 # Do NOT add Strawberry c/bin — its bundled cmake shadows the system cmake.
 $env:PATH = "C:/MyDevelop/Strawberry/perl/bin;" + $env:PATH
@@ -107,8 +233,8 @@ Write-Host "== [1/5] Applying Cubicon overlay (reset to pristine + apply patches
 # resetting only from that polluted index reintroduces the old patched source and makes the next
 # `git apply` conflict (e.g. "Applied ... with conflicts / U src/libslic3r/utils.cpp") whenever a
 # patch changed. Resetting to HEAD guarantees a pristine tree every build.
-git checkout HEAD -- src resources CMakeLists.txt version.inc 2>$null
-& "$repo/cubicon/scripts/apply_overlay.ps1"
+Invoke-Logged { git checkout HEAD -- src resources CMakeLists.txt version.inc 2>$null }
+Invoke-LoggedScript { & "$repo/cubicon/scripts/apply_overlay.ps1" }
 
 # ---- Build type: 'release' strips the -rc suffix from the product version (cubicon_version.txt is
 # the single source of truth read by version.inc -> CUBI_ORCA_VERSION -> version display, splash,
@@ -133,22 +259,20 @@ if ($effVer -ne $rawVer) {
 # keeps every filament. TEST builds skip this and include everything.
 if ($BuildType -eq 'release') {
     Write-Host "== [1b/5] Release: pruning test-only filaments ==" -ForegroundColor Cyan
-    & "$repo/cubicon/scripts/prune_test_filaments.ps1" -RepoRoot $repo
+    Invoke-LoggedScript { & "$repo/cubicon/scripts/prune_test_filaments.ps1" -RepoRoot $repo }
 }
-
-try {
 
 if ($optDeps -or -not (Test-Path $depOut)) {
     Write-Host "== [2/5] Building dependencies (Release) ==" -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path "$repo/deps/build" | Out-Null
     Push-Location "$repo/deps/build"
     try {
-        & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release
+        Invoke-Logged { & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release }
         if ($LASTEXITCODE -ne 0) { throw "deps configure failed" }
         # Cap MSBuild project-parallelism for deps (sub-builds may still spike briefly; deps is a
         # one-time cost, reused afterwards via -SkipDeps / auto-skip). Use CMake's --parallel so it
         # emits a correctly-formatted /m:N (passing "-- -m:N" gets mangled into "-m: N" -> MSB1031).
-        & $cmake --build . --config Release --target deps --parallel $jobs
+        Invoke-Logged { & $cmake --build . --config Release --target deps --parallel $jobs }
         if ($LASTEXITCODE -ne 0) { throw "deps build failed (see notes: OpenSSL perl / Boost extract)" }
     } finally { Pop-Location }
 } else {
@@ -180,23 +304,38 @@ try {
     # Throttle via SLIC3R_MSVC_PARALLEL_COUNT (adds /MP:$jobs to the existing flags — does NOT
     # replace CMAKE_CXX_FLAGS, so the MSVC defaults /DWIN32 /D_WINDOWS /EHsc stay intact), then
     # build one project at a time (--parallel 1) so total parallel cl.exe == $jobs (~CpuPercent).
-    & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release "-DSLIC3R_MSVC_PARALLEL_COUNT=$jobs"
+    Invoke-Logged { & $cmake .. -G $gen -A x64 -DCMAKE_BUILD_TYPE=Release "-DSLIC3R_MSVC_PARALLEL_COUNT=$jobs" }
     if ($LASTEXITCODE -ne 0) { throw "app configure failed" }
     # --parallel 1: build one project at a time so total cl.exe == the /MP:$jobs file-level cap
     # (~CpuPercent of cores). CMake emits a correct /m:1 (avoids the "-- -m:1" -> MSB1031 mangling).
-    & $cmake --build . --config Release --target ALL_BUILD --parallel 1
+    Invoke-Logged { & $cmake --build . --config Release --target ALL_BUILD --parallel 1 }
     if ($LASTEXITCODE -ne 0) { throw "app build failed" }
-    & $cmake --build . --config Release --target install
-    if ($LASTEXITCODE -ne 0) { throw "app install failed" }
+    # Re-check: the app may have been launched while the build was running (it takes a while).
+    Assert-AppNotRunning "install"
+    Invoke-Logged { & $cmake --build . --config Release --target install }
+    if ($LASTEXITCODE -ne 0) {
+        if (@(Get-BlockingAppProcesses).Count -gt 0) {
+            throw "app install failed - the built app was started during install; close it and re-run"
+        }
+        throw "app install failed (파일 잠김이면 위 로그의 'Permission denied' 대상 파일을 쓰고 있는 프로세스를 확인하세요)"
+    }
 } finally { Pop-Location }
 
 if ($optPackage) {
     Write-Host "== [5/5] Packaging installer ==" -ForegroundColor Cyan
-    & "$repo/cubicon/scripts/package_win.ps1"
+    Invoke-LoggedScript { & "$repo/cubicon/scripts/package_win.ps1" }
 } else {
     Write-Host "== [5/5] Skipped packaging — app at build/OrcaSlicer ==" -ForegroundColor DarkGray
 }
 
+}
+catch {
+    # MSBuild prints the same failure ten times across ten target lines, so the one line that says
+    # what actually broke scrolls away. Repeat it last, in red, where it can be seen.
+    Write-Host ""
+    Write-Host ("== build_win.ps1 FAILED: {0} ==" -f $_.Exception.Message) -ForegroundColor Red
+    if ($logFile) { Write-Host ("   전체 로그: {0}" -f $logFile) -ForegroundColor Red }
+    throw
 }
 finally {
     # Restore the SSOT version file if a release build temporarily stripped its rc suffix.
@@ -204,5 +343,6 @@ finally {
         Set-Content -NoNewline -Path $verFile -Value $verRestore -Encoding utf8
         Write-Host ("Restored version file to '{0}'" -f $verRestore) -ForegroundColor DarkGray
     }
+    if ($logFile) { Write-Host ("Build log: {0}" -f $logFile) -ForegroundColor DarkGray }
 }
 Write-Host "== build_win.ps1 complete ==" -ForegroundColor Green

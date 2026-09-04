@@ -12,7 +12,9 @@ $brand   = Join-Path $repo "cubicon/branding"
 $license = Join-Path $repo "LICENSE.txt"
 $nsi     = Join-Path $repo "installer/windows/InstallScript.nsi"
 $redist  = Join-Path $repo "installer/windows/redist"
-$outDir  = Join-Path $repo "dist"
+# NSIS resolves a relative OutFile against the .nsi's own directory, so the installer always lands
+# next to InstallScript.nsi — installer/windows/ — which is where we want it (macOS: installer/macos/).
+$outDir  = Join-Path $repo "installer/windows"
 
 foreach ($p in @($stage, $verHdr, $license, $nsi)) {
     if (-not (Test-Path $p)) { Write-Error "Missing required input: $p (build the app first?)" }
