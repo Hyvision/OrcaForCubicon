@@ -25,7 +25,7 @@ MACHINES = {
     "Cubicon xCeler-Mini 0.4 nozzle": (150, 150, 150),
     "Cubicon xCeler-I 0.4 nozzle":    (250, 250, 290),
     "Cubicon xCeler-Plus 0.4 nozzle": (310, 310, 310),
-    "Cubicon xCeler-Plus CoreXY 0.4 nozzle": (310, 310, 310),
+    "Cubicon xCeler-Plus HS 0.4 nozzle": (310, 310, 310),
 }
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

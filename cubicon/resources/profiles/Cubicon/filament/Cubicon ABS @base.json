@@ -71,6 +71,9 @@
     "additional_cooling_fan_speed": [
         "0"
     ],
+    "filament_z_hop": [
+        "0.4"
+    ],
     "activate_air_filtration": [
         "1"
     ],

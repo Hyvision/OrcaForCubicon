@@ -20,7 +20,7 @@ param(
     [switch]$Clean,
     [switch]$Deps,
     [switch]$SkipPackage,
-    [ValidateSet('test','release')][string]$BuildType = 'test',  # 'release' strips the -rc suffix from all version displays
+    [ValidateSet('test','release')][string]$BuildType = 'test',  # 'release' strips the -rc suffix from all version displays and prunes test-only filaments/machines
     [Alias("y")][switch]$NonInteractive,
     [int]$CpuPercent = 70,         # cap build CPU usage (~% of logical cores); keeps the PC usable
     [int]$MemPerJobGB = 3          # est. RAM per parallel cl.exe (libslic3r PCH is heavy); also caps jobs by RAM
@@ -123,7 +123,7 @@ if ($interactive) {
     $optClean   = Ask-YesNo "1) build/ 폴더를 정리하고 새로 빌드할까요?" $optClean
     $optDeps    = Ask-YesNo "2) 의존성(deps)을 강제로 다시 빌드할까요?" $optDeps
     $optPackage = Ask-YesNo "3) 인스톨러(.exe)까지 생성할까요?" $optPackage
-    $btAns = Read-Host "4) 빌드 유형 - test(=rc 표시 유지) / release(=rc 표시 제거) [기본: $BuildType]"
+    $btAns = Read-Host "4) 빌드 유형 - test(=rc 표시 유지) / release(=rc 표시 제거 + 테스트 전용 필라멘트/장비 제외) [기본: $BuildType]"
     if (-not [string]::IsNullOrWhiteSpace($btAns)) {
         $btAns = $btAns.Trim().ToLower()
         if ($btAns -in @('release','test')) { $BuildType = $btAns }
@@ -134,7 +134,7 @@ if ($interactive) {
     Write-Host ("  - Clean build : {0}" -f $(if ($optClean) { '예' } else { '아니오' }))
     Write-Host ("  - Rebuild deps: {0}" -f $(if ($optDeps) { '예' } else { $(if ($depsPresent) { '아니오 (재사용)' } else { '예 (없어서 자동)' }) }))
     Write-Host ("  - Package     : {0}" -f $(if ($optPackage) { '예 (installer)' } else { '아니오 (앱만)' }))
-    Write-Host ("  - Build type  : {0}" -f $(if ($BuildType -eq 'release') { 'release (rc 표시 제거)' } else { 'test (rc 표시 유지)' }))
+    Write-Host ("  - Build type  : {0}" -f $(if ($BuildType -eq 'release') { 'release (rc 표시 제거 + 테스트 전용 제외)' } else { 'test (rc 표시 유지)' }))
     if (-not (Ask-YesNo "이대로 진행할까요?" $true)) { Write-Host "취소됨." -ForegroundColor Yellow; return }
 }
 
@@ -254,12 +254,13 @@ if ($effVer -ne $rawVer) {
 }
 
 # ---- Release-only: drop unverified "test-only" filaments (cubicon/version/test_only_filaments.txt)
-# from the generated resources/ tree so they ship in TEST builds but not RELEASE builds. This edits
-# the build copy only (regenerated from the overlay each build); the SSOT under cubicon/resources
-# keeps every filament. TEST builds skip this and include everything.
+# and machines (cubicon/version/test_only_machines.txt) from the generated resources/ tree so they
+# ship in TEST builds but not RELEASE builds. This edits the build copy only (regenerated from the
+# overlay each build); the SSOT under cubicon/resources keeps everything. TEST builds skip this.
 if ($BuildType -eq 'release') {
-    Write-Host "== [1b/5] Release: pruning test-only filaments ==" -ForegroundColor Cyan
+    Write-Host "== [1b/5] Release: pruning test-only filaments/machines ==" -ForegroundColor Cyan
     Invoke-LoggedScript { & "$repo/cubicon/scripts/prune_test_filaments.ps1" -RepoRoot $repo }
+    Invoke-LoggedScript { & "$repo/cubicon/scripts/prune_test_machines.ps1" -RepoRoot $repo }
 }
 
 if ($optDeps -or -not (Test-Path $depOut)) {

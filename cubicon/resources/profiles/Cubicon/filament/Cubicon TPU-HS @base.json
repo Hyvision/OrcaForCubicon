@@ -89,7 +89,7 @@
         "1.5"
     ],
     "filament_z_hop": [
-        "0"
+        "0.4"
     ],
     "filament_retraction_speed": [
         "30"

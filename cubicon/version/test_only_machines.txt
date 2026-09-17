@@ -1,0 +1,22 @@
+# Test-only machines — included in TEST builds, EXCLUDED from RELEASE builds.
+#
+# One printer model name per line, exactly as it appears in Cubicon.json machine_model_list
+# (e.g. "Cubicon xCeler-Plus HS"). A line removes, for that model:
+#   - machine_model_list entry whose name equals the line
+#   - machine_list   entries named "<line>" or "<line> ..."   (e.g. "<line> 0.4 nozzle")
+#   - process_list / filament_list entries whose name contains "@<line> " or ends with "@<line>"
+#   - the JSON files behind those entries, plus "<line>_*" assets (cover image, bed model/texture)
+#
+# Because the match is prefix-based, listing a model whose name is a prefix of another model
+# ("Cubicon xCeler-Plus" vs "Cubicon xCeler-Plus HS") would take BOTH lines out. List the exact
+# model you mean.
+#
+# Workflow:
+#   - Adding a new UNVERIFIED machine line: add its files + Cubicon.json entries as usual, then
+#     add its model name here. TEST builds show it; RELEASE builds omit it.
+#   - When the machine is ready to ship: delete its line here (that's all).
+#
+# Lines starting with '#' and blank lines are ignored.
+
+Cubicon xCeler-Plus HS
+Cubicon xCeler-Mini

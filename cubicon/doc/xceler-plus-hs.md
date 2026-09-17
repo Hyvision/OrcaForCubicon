@@ -1,7 +1,11 @@
-# xCeler-Plus CoreXY — 별도 제품 라인 분리
+# xCeler-Plus HS — 별도 제품 라인 분리
 
 xCeler-Plus 가 CoreXY 구동 + AC 베드 히터로 개정되면서, 슬라이서에서 **기존 출하 장비와 구분되는
 별도 프린터**로 등록했다. 1.5.3-rc1 / 프로파일 패키지 02.03.07.00.
+
+1.5.3-rc3 에서 제품명이 `xCeler-Plus CoreXY` → **`xCeler-Plus HS`** 로 확정되었고, 동시에
+**TEST 빌드에만 노출**되도록 전환했다 (아래 [테스트 전용 노출](#테스트-전용-노출) 참고).
+프로파일 패키지 02.03.09.00.
 
 ## 왜 필라멘트 프리셋 추가가 아니라 기기 분리인가
 
@@ -14,7 +18,7 @@ xCeler-Plus 가 CoreXY 구동 + AC 베드 히터로 개정되면서, 슬라이�
 
 ## 무엇이 다른가
 
-| | xCeler-Plus (기존) | xCeler-Plus CoreXY |
+| | xCeler-Plus (기존) | xCeler-Plus HS |
 |---|---|---|
 | 구동 | (기존 구조) | CoreXY (`printer_structure: corexy`) |
 | 베드 히터 | 기존 | AC, 성능 향상 |
@@ -32,20 +36,21 @@ xCeler-Plus 가 CoreXY 구동 + AC 베드 히터로 개정되면서, 슬라이�
    허용하므로 실측 후 조정해야 한다. 값 주시면 반영한다.
 2. **나머지 필라멘트의 베드 온도** — AC 베드에서 ABS(115/115), ABSk, PC, PA-CF 가 그대로여도
    되는지 검증이 필요하다. A100 만 105/100 으로 내려간 것이 다소 이례적이다.
-3. **제품명** — `xCeler-Plus CoreXY` 는 임시다. 고객이 **자기 장비를 보고 어느 쪽인지 판단할 수
-   있어야** 한다는 것이 유일한 요구 조건이다. 라벨·시리얼 구간·펌웨어 버전 중 무엇으로 구분되는지
-   정해지면 그에 맞춰 이름을 바꾼다. 이름을 바꿀 때는 `machine/`·`process/`·`filament/` 의 파일명과
-   각 JSON 의 `name`/`printer_model`/`compatible_printers`/`default_materials`, `Cubicon.json` 의
-   4개 목록을 함께 바꿔야 한다 (이미 배포된 뒤라면 기존 이름을 유지하는 편이 안전하다).
-4. **커버 이미지** — 기존 Plus 이미지를 복사해 두었다. CoreXY 사진으로 교체 필요
-   (`Cubicon xCeler-Plus CoreXY_cover.png`).
+3. ~~**제품명**~~ — 1.5.3-rc3 에서 `xCeler-Plus HS` 로 확정. 이름이 또 바뀔 때는
+   `machine/`·`process/`·`filament/` 의 파일명과 각 JSON 의
+   `name`/`printer_model`/`compatible_printers`/`default_materials`, `Cubicon.json` 의 4개 목록,
+   커버 이미지 파일명, `cubicon/version/test_only_machines.txt`,
+   `cubicon/scripts/verify_build_volume_guard.py` 를 함께 바꿔야 한다
+   (RELEASE 로 한 번 나간 뒤라면 기존 이름을 유지하는 편이 안전하다).
+4. **커버 이미지** — 기존 Plus 이미지를 복사해 두었다. HS 실물 사진으로 교체 필요
+   (`Cubicon xCeler-Plus HS_cover.png`).
 5. **릴리즈 노트** — 고객용 시트(`OrcaForCubicon_ReleaseNotes.xlsx`)에 신규 기종 추가 반영 필요.
 
 ## 빌드 볼륨 가드로는 오선택을 못 막는다
 
 두 기종의 조형 공간이 310³ 로 같아서 `REQ_X/Y/Z` 가 동일하다. 즉 기존 Plus 용으로 슬라이싱한
-A100 파일이 CoreXY 장비에서 그대로 출력된다 (크기 기준으로는 정상).
-온도 오선택까지 막으려면 별도 장치가 필요하다 — 예: CoreXY 펌웨어의 `START_PRINT` 에서 베드 온도를
+A100 파일이 HS 장비에서 그대로 출력된다 (크기 기준으로는 정상).
+온도 오선택까지 막으려면 별도 장치가 필요하다 — 예: HS 펌웨어의 `START_PRINT` 에서 베드 온도를
 하드웨어 실제 상한으로 클램프. 다만 **프로파일 분리의 대체재가 아니라 안전망**으로만 쓸 것.
 슬라이서는 115 를 표시하는데 장비가 105 로 굽는 상태는 원인 추적을 어렵게 하므로, 클램프가 걸리면
 로그를 남겨야 한다. → [build-volume-guard-firmware.md](build-volume-guard-firmware.md)
@@ -53,14 +58,30 @@ A100 파일이 CoreXY 장비에서 그대로 출력된다 (크기 기준으로�
 ## 추가된 파일 (15개) + Cubicon.json 엔트리 14개
 
 ```
-machine/Cubicon xCeler-Plus CoreXY.json                 (machine_model)
-machine/Cubicon xCeler-Plus CoreXY 0.4 nozzle.json      (machine)
-process/cubicon default @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json
-filament/<11종> @Cubicon xCeler-Plus CoreXY 0.4 nozzle.json
-Cubicon xCeler-Plus CoreXY_cover.png
+machine/Cubicon xCeler-Plus HS.json                 (machine_model)
+machine/Cubicon xCeler-Plus HS 0.4 nozzle.json      (machine)
+process/cubicon default @Cubicon xCeler-Plus HS 0.4 nozzle.json
+filament/<11종> @Cubicon xCeler-Plus HS 0.4 nozzle.json
+Cubicon xCeler-Plus HS_cover.png
 ```
 
 베드 텍스처는 기존 `Cubicon xCeler-I_bed_texture.svg` 를 공유한다 (Plus 와 동일).
+
+## 테스트 전용 노출
+
+모션 튜닝과 베드 온도 검증이 끝나지 않았으므로, 이 기종은 **TEST(rc) 빌드에만** 나타나고
+RELEASE 빌드에서는 빠진다. 필라멘트 쪽의 `test_only_filaments.txt` 와 같은 방식이다.
+
+```
+cubicon/version/test_only_machines.txt        기종명 목록 (기종당 한 줄)
+cubicon/scripts/prune_test_machines.ps1|.sh   RELEASE 빌드에서 해당 기종 제거
+```
+
+RELEASE 빌드는 빌드 트리(`resources/profiles/Cubicon`)에서 그 기종의 machine_model·machine·
+process·per-machine 필라멘트 파일과 커버 이미지를 지우고, `Cubicon.json` 의 4개 목록에서 같은
+엔트리를 제거한다. 오버레이 SSOT(`cubicon/resources/`)는 건드리지 않으므로 TEST 빌드는 그대로 전부 포함한다.
+
+**출시할 때는** `test_only_machines.txt` 에서 해당 줄만 지우면 된다.
 
 ## 검증
 
@@ -75,7 +96,7 @@ Cubicon xCeler-Plus CoreXY_cover.png
   | | 초기레이어 (`START_PRINT BED_TEMP`) | 이후 레이어 (`M140`) |
   |---|---|---|
   | 기존 Plus | `BED_TEMP=115` | `M140 S105` |
-  | CoreXY | `BED_TEMP=105` | `M140 S100` |
+  | HS | `BED_TEMP=105` | `M140 S100` |
 
 ### 어느 베드 타입 키가 실제로 쓰이는가
 

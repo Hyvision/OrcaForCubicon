@@ -138,7 +138,7 @@
     "min_layer_height": [
         "0.1"
     ],
-    "name": "Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+    "name": "Cubicon xCeler-Plus HS 0.4 nozzle",
     "nozzle_diameter": [
         "0.4"
     ],
@@ -158,9 +158,9 @@
         "0x310"
     ],
     "printable_height": "310",
-    "printer_model": "Cubicon xCeler-Plus CoreXY",
+    "printer_model": "Cubicon xCeler-Plus HS",
     "printer_notes": "",
-    "printer_settings_id": "Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+    "printer_settings_id": "Cubicon xCeler-Plus HS 0.4 nozzle",
     "printer_structure": "corexy",
     "printer_technology": "FFF",
     "printer_variant": "0.4",

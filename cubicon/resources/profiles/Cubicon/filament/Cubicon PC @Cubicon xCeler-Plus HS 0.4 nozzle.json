@@ -3,11 +3,11 @@
     "instantiation": "true",
     "version": "1.0.0.0",
     "compatible_printers": [
-        "Cubicon xCeler-Plus CoreXY 0.4 nozzle"
+        "Cubicon xCeler-Plus HS 0.4 nozzle"
     ],
     "inherits": "Cubicon PC @base",
-    "name": "Cubicon PC @Cubicon xCeler-Plus CoreXY 0.4 nozzle",
+    "name": "Cubicon PC @Cubicon xCeler-Plus HS 0.4 nozzle",
     "filament_settings_id": [
-        "Cubicon PC @Cubicon xCeler-Plus CoreXY 0.4 nozzle"
+        "Cubicon PC @Cubicon xCeler-Plus HS 0.4 nozzle"
     ]
 }

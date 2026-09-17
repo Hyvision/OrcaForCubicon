@@ -7,11 +7,11 @@
 | xCeler-Mini | 150 × 150 × 150 | 허용 | 허용 | 허용 |
 | xCeler-I | 250 × 250 × 290 | 차단 | 허용 | 허용 |
 | xCeler-Plus | 310 × 310 × 310 | 차단 | 차단 | 허용 |
-| xCeler-Plus CoreXY | 310 × 310 × 310 | 차단 | 차단 | 허용 |
+| xCeler-Plus HS | 310 × 310 × 310 | 차단 | 차단 | 허용 |
 
-xCeler-Plus 와 xCeler-Plus CoreXY 는 조형 공간이 같아서 **이 가드로는 서로 구분되지 않는다.**
+xCeler-Plus 와 xCeler-Plus HS 는 조형 공간이 같아서 **이 가드로는 서로 구분되지 않는다.**
 두 기종은 ABS-A100 베드 온도가 다르므로, 그 오선택은 별도로 다뤄야 한다.
-→ [xceler-plus-corexy.md](xceler-plus-corexy.md)
+→ [xceler-plus-hs.md](xceler-plus-hs.md)
 
 조형 공간이 `Mini ⊂ xCeler-I ⊂ Plus` 로 완전히 포함되므로 **치수 비교 한 번**으로 위 표가 그대로 성립한다.
 모델명 목록을 관리할 필요가 없고, 기종이 추가돼도 규칙을 고칠 필요가 없다.
@@ -35,7 +35,7 @@ START_PRINT EXTRUDER_TEMP=[nozzle_temperature_initial_layer] BED_TEMP=[bed_tempe
 START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=150 REQ_Y=150 REQ_Z=150   ; xCeler-Mini
 START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=250 REQ_Y=250 REQ_Z=290   ; xCeler-I
 START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=310 REQ_Y=310 REQ_Z=310   ; xCeler-Plus
-START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=310 REQ_Y=310 REQ_Z=310   ; xCeler-Plus CoreXY
+START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=310 REQ_Y=310 REQ_Z=310   ; xCeler-Plus HS
 ```
 
 - 값은 **소수점 없이 정수**로 나온다 (`310`, `310.000000` 이 아님).

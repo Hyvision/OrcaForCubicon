@@ -13,7 +13,7 @@
 #   -P            skip packaging (stop after the .app build)
 #   -t <ver>      macOS deployment target (default 11.3)
 #   -b <type>     test (default, keeps -rc suffix) | release (strips -rc suffix + prunes
-#                 test-only filaments) — mirrors build_win.ps1's -BuildType
+#                 test-only filaments/machines) — mirrors build_win.ps1's -BuildType
 #   -y            non-interactive: use flags/defaults, ask nothing
 #
 # Notes:
@@ -111,7 +111,7 @@ if [ "$NONINTERACTIVE" -ne 1 ] && [ -t 0 ]; then
   # 4) package
   if ask_yesno "4) DMG 패키지까지 생성할까요?" "$([ "$SKIP_PKG" -eq 1 ] && echo n || echo y)"; then SKIP_PKG=0; else SKIP_PKG=1; fi
   # 5) build type
-  read -r -p "5) 빌드 유형 - test(=rc 표시 유지) / release(=rc 표시 제거 + 테스트 전용 필라멘트 제외) [기본: $BUILD_TYPE]: " bt || true
+  read -r -p "5) 빌드 유형 - test(=rc 표시 유지) / release(=rc 표시 제거 + 테스트 전용 필라멘트/장비 제외) [기본: $BUILD_TYPE]: " bt || true
   if [ -n "${bt:-}" ]; then
     bt="$(printf '%s' "$bt" | tr '[:upper:]' '[:lower:]')"
     case "$bt" in
@@ -159,12 +159,13 @@ else
 fi
 
 # ---- Release-only: drop unverified "test-only" filaments (cubicon/version/test_only_filaments.txt)
-# from the generated resources/ tree so they ship in TEST builds but not RELEASE builds. This edits
-# the build copy only (regenerated from the overlay each build); the SSOT under cubicon/resources
-# keeps every filament. TEST builds skip this and include everything.
+# and machines (cubicon/version/test_only_machines.txt) from the generated resources/ tree so they
+# ship in TEST builds but not RELEASE builds. This edits the build copy only (regenerated from the
+# overlay each build); the SSOT under cubicon/resources keeps everything. TEST builds skip this.
 if [ "$BUILD_TYPE" = "release" ]; then
-  echo "== [1b/5] Release: pruning test-only filaments =="
+  echo "== [1b/5] Release: pruning test-only filaments/machines =="
   bash "$REPO/cubicon/scripts/prune_test_filaments.sh"
+  bash "$REPO/cubicon/scripts/prune_test_machines.sh"
 fi
 
 DEPS_MARK="deps/build/$ARCH/OrcaSlicer_dep"

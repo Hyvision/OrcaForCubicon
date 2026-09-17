@@ -36,7 +36,7 @@ START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=310 REQ_Y=310 REQ_Z=310
 | xCeler-Mini | 150 150 150 | 허용 | 허용 | 허용 |
 | xCeler-I | 250 250 290 | **차단** | 허용 | 허용 |
 | xCeler-Plus | 310 310 310 | **차단** | **차단** | 허용 |
-| xCeler-Plus CoreXY | 310 310 310 | **차단** | **차단** | 허용 (Plus 와 구분 불가) |
+| xCeler-Plus HS | 310 310 310 | **차단** | **차단** | 허용 (Plus 와 구분 불가) |
 | 1.5.2 이하 (REQ 없음) | — | 허용 | 허용 | 허용 |
 
 조형 공간이 `Mini ⊂ xCeler-I ⊂ Plus` 로 완전히 포함되므로 **축별 치수 비교 한 번**이면
@@ -62,7 +62,7 @@ START_PRINT EXTRUDER_TEMP=200 BED_TEMP=35 REQ_X=310 REQ_Y=310 REQ_Z=310
 #   xCeler-Mini        : 150 / 150 / 150
 #   xCeler-I           : 250 / 250 / 290
 #   xCeler-Plus        : 310 / 310 / 310
-#   xCeler-Plus CoreXY : 310 / 310 / 310
+#   xCeler-Plus HS : 310 / 310 / 310
 [gcode_macro _BUILD_VOLUME]
 variable_max_x: 310
 variable_max_y: 310
@@ -123,7 +123,7 @@ gcode:
 ## 4. 시험 항목
 
 3가지 조형 공간 × 3파일 + 레거시. `enforce: 1` 상태에서 확인한다.
-xCeler-Plus CoreXY 는 Plus 와 조형 공간이 같아 아래 표의 Plus 행이 그대로 적용된다.
+xCeler-Plus HS 는 Plus 와 조형 공간이 같아 아래 표의 Plus 행이 그대로 적용된다.
 
 | # | 파일 | 장비 | 기대 결과 |
 |---|---|---|---|

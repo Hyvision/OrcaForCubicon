@@ -6,6 +6,9 @@
 | `build_win.ps1` / `build_mac.sh` | **한 줄 빌드+패키지**: 오버레이 재적용 → deps(없으면만) → build → installer/DMG |
 | `package_win.ps1` / `package_mac.sh` | NSIS(exe) / DMG 생성 (버전+타임스탬프 파일명 자동) |
 | `set_version.ps1` / `.sh` | `version/cubicon_version.txt` 버전 출력(SSOT 확인용) |
+| `prune_profiles.ps1` / `.sh` | 빌드 트리에서 Cubicon 외 벤더 프로파일 제거 (오버레이 적용 직후 자동 실행) |
+| `prune_test_filaments.ps1` / `.sh` | RELEASE 빌드에서 `version/test_only_filaments.txt` 의 필라멘트 제외 |
+| `prune_test_machines.ps1` / `.sh` | RELEASE 빌드에서 `version/test_only_machines.txt` 의 기종 제외 ([문서](../doc/xceler-plus-hs.md#테스트-전용-노출)) |
 | `verify_build_volume_guard.py` | 4기종을 슬라이싱해 `START_PRINT` 의 `REQ_X/Y/Z` 가 조형 크기와 맞는지 검사 ([문서](../doc/build-volume-guard.md)) |
 
 ## 한 줄 빌드 (git 업데이트 후)
