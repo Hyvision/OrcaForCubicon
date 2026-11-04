@@ -1,0 +1,17 @@
+diff --git a/src/libslic3r/Preset.cpp b/src/libslic3r/Preset.cpp
+index b33d344b2a..2fa91ca714 100644
+--- a/src/libslic3r/Preset.cpp
++++ b/src/libslic3r/Preset.cpp
+@@ -2886,6 +2886,12 @@ void PresetCollection::save_current_preset(const std::string &new_name, bool det
+         }
+         // Overwriting an existing preset.
+         preset.config = std::move(curr_preset.config);
++        // Cubicon: a system preset's config carries an empty "inherits", so overwriting an existing
++        // user preset from a system preset (e.g. the Physical Printer dialog saving its default
++        // "<system> - Copy" name a second time) used to detach it and hide every vendor filament.
++        // Link it to the system preset, as the "creating a new preset" branch below does.
++        if (!detach && curr_preset.is_system)
++            preset.inherits() = curr_preset.name;
+         // The newly saved preset will be activated -> make it visible.
+         preset.is_visible = true;
+         //TODO: remove the detach logic
