@@ -1,6 +1,6 @@
 {
     "name": "Cubicon",
-    "version": "02.03.09.00",
+    "version": "02.03.12.00",
     "force_update": "0",
     "description": "Cubicon configurations",
     "machine_model_list": [
@@ -15,6 +15,10 @@
         {
             "name": "Cubicon xCeler-Plus HS",
             "sub_path": "machine/Cubicon xCeler-Plus HS.json"
+        },
+        {
+            "name": "Cubicon xCeler-GX400",
+            "sub_path": "machine/Cubicon xCeler-GX400.json"
         },
         {
             "name": "Cubicon xCeler-Mini",
@@ -49,6 +53,10 @@
         {
             "name": "cubicon default @Cubicon xCeler-Plus HS 0.4 nozzle",
             "sub_path": "process/cubicon default @Cubicon xCeler-Plus HS 0.4 nozzle.json"
+        },
+        {
+            "name": "cubicon default @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "process/cubicon default @Cubicon xCeler-GX400 0.4 nozzle.json"
         },
         {
             "name": "cubicon default @Cubicon xCeler-Mini 0.4 nozzle",
@@ -139,6 +147,10 @@
         {
             "name": "Cubicon PLAi21 @Cubicon xCeler-Plus HS 0.4 nozzle",
             "sub_path": "filament/Cubicon PLAi21 @Cubicon xCeler-Plus HS 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PLAi21 @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon PLAi21 @Cubicon xCeler-GX400 0.4 nozzle.json"
         },
         {
             "name": "Cubicon PLAi21 @Cubicon xCeler-Mini 0.4 nozzle",
@@ -321,6 +333,10 @@
         {
             "name": "Cubicon xCeler-Plus HS 0.4 nozzle",
             "sub_path": "machine/Cubicon xCeler-Plus HS 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "machine/Cubicon xCeler-GX400 0.4 nozzle.json"
         },
         {
             "name": "Cubicon xCeler-Mini 0.4 nozzle",

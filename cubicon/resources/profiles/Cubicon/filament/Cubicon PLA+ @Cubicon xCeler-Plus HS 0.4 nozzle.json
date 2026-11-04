@@ -7,5 +7,11 @@
     "compatible_printers": [
         "Cubicon xCeler-Plus HS 0.4 nozzle"
     ],
-    "inherits": "Cubicon PLA+ @base"
+    "inherits": "Cubicon PLA+ @base",
+    "hot_plate_temp": [
+        "60"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "60"
+    ]
 }

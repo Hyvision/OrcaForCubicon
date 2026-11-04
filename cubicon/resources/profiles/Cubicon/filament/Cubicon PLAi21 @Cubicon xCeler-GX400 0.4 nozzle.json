@@ -1,0 +1,23 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon PLAi21 @Cubicon xCeler-GX400 0.4 nozzle",
+    "compatible_printers": [
+        "Cubicon xCeler-GX400 0.4 nozzle"
+    ],
+    "inherits": "Cubicon PLAi21 @base",
+    "filament_max_volumetric_speed": [
+        "25"
+    ],
+    "pressure_advance": [
+        "0.01"
+    ],
+    "hot_plate_temp": [
+        "60"
+    ],
+    "hot_plate_temp_initial_layer": [
+        "60"
+    ]
+}
