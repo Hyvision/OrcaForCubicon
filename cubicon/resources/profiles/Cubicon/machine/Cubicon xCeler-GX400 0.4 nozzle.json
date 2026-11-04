@@ -60,15 +60,15 @@
         "5000"
     ],
     "machine_max_acceleration_extruding": [
-        "5000",
+        "7500",
         "20000"
     ],
     "machine_max_acceleration_x": [
-        "13000",
+        "7500",
         "20000"
     ],
     "machine_max_acceleration_y": [
-        "13000",
+        "7500",
         "20000"
     ],
     "machine_max_acceleration_z": [
@@ -84,7 +84,7 @@
         "5000"
     ],
     "machine_max_acceleration_travel": [
-        "13000",
+        "7500",
         "13000"
     ],
     "machine_max_jerk_e": [
