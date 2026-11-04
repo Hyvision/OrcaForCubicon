@@ -18,6 +18,5 @@
 #
 # Lines starting with '#' and blank lines are ignored.
 
-Cubicon xCeler-Plus HS
 Cubicon xCeler-Mini
 Cubicon xCeler-GX400
