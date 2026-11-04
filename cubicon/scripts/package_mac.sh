@@ -28,7 +28,9 @@ cd "$REPO"
 [ -z "$OUTDIR" ] && OUTDIR="$REPO/installer/macos"
 mkdir -p "$OUTDIR"
 
-VER="$(tr -d '[:space:]' < cubicon/version/cubicon_version.txt)"   # SSOT, e.g. 1.5.0-rc1
+# SSOT, e.g. 1.5.0-rc1. The file may start with a UTF-8 BOM (written by the Windows tooling); strip it
+# so it doesn't leak into the DMG filename / Info.plist versions.
+VER="$(LC_ALL=C tr -d '[:space:]\357\273\277' < cubicon/version/cubicon_version.txt)"
 SRC_APP="build/$ARCH/OrcaSlicer/OrcaSlicer.app"
 [ -d "$SRC_APP" ] || { echo "!! $SRC_APP not found — run build_mac.sh -a $ARCH first." >&2; exit 1; }
 
@@ -63,19 +65,11 @@ STAMP="$(date +%Y%m%d_%H%M%S)"   # wall-clock build time -> DMG filename
 DMG="$OUTDIR/OrcaForCubicon_${VER}_macOS_${ARCH}_${STAMP}.dmg"
 rm -f "$DMG"
 echo "== [3] Building DMG -> $DMG =="
-if command -v create-dmg >/dev/null 2>&1; then
-  # create-dmg gives a nicer layout (Applications symlink, window size). brew install create-dmg
-  create-dmg \
-    --volname "OrcaForCubicon $VER" \
-    --app-drop-link 450 180 \
-    --icon "OrcaForCubicon.app" 150 180 \
-    --window-size 600 380 \
-    "$DMG" "$DST_APP" || { echo "create-dmg failed; falling back to hdiutil"; command -v hdiutil >/dev/null && hdiutil create -volname "OrcaForCubicon $VER" -srcfolder "$STAGE" -ov -format UDZO "$DMG"; }
-else
-  echo "  (create-dmg not found; using hdiutil — plain layout. brew install create-dmg for a nicer DMG.)"
-  ln -s /Applications "$STAGE/Applications"
-  hdiutil create -volname "OrcaForCubicon $VER" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
-fi
+# Plain hdiutil + an /Applications symlink (drag-to-install target). create-dmg is intentionally not
+# used: it scripts Finder via AppleScript, which hangs/fails on recent macOS and, when it failed,
+# left a DMG without the Applications link.
+ln -s /Applications "$STAGE/Applications"
+hdiutil create -volname "OrcaForCubicon $VER" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 
 rm -rf "$STAGE"
 echo "== package_mac.sh complete: $DMG =="
