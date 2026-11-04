@@ -11,7 +11,7 @@
 #   -c            clean: wipe build/<arch> first for a fresh app build
 #   -D            force-rebuild dependencies (otherwise reused if present)
 #   -P            skip packaging (stop after the .app build)
-#   -t <ver>      macOS deployment target (default 11.3)
+#   -t <ver>      macOS deployment target (default 12.0)
 #   -b <type>     test (default, keeps -rc suffix) | release (strips -rc suffix + prunes
 #                 test-only filaments/machines) — mirrors build_win.ps1's -BuildType
 #   -y            non-interactive: use flags/defaults, ask nothing
@@ -24,7 +24,7 @@
 set -euo pipefail
 SECONDS=0
 
-ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="11.3"; NONINTERACTIVE=0; CPU_PCT=70; BUILD_TYPE="test"
+ARCH=""; CLEAN=0; FORCE_DEPS=0; SKIP_PKG=0; DEPLOY_TGT="12.0"; NONINTERACTIVE=0; CPU_PCT=70; BUILD_TYPE="test"
 while getopts ":a:cDPt:b:yj:h" opt; do
   case "$opt" in
     a) ARCH="$OPTARG" ;;
@@ -35,7 +35,7 @@ while getopts ":a:cDPt:b:yj:h" opt; do
     b) BUILD_TYPE="$OPTARG" ;;
     y) NONINTERACTIVE=1 ;;
     j) CPU_PCT="$OPTARG" ;;
-    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 11.3] [-b test|release] [-j cpu%] [-y]"; exit 0 ;;
+    h) echo "Usage: build_mac.sh [-a arm64|x86_64|universal] [-c clean] [-D force deps] [-P skip package] [-t 12.0] [-b test|release] [-j cpu%] [-y]"; exit 0 ;;
     *) ;;
   esac
 done
