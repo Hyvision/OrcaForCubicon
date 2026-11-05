@@ -16,6 +16,9 @@
     "travel_acceleration": "6000",
     "travel_speed": "280",
     "accel_to_decel_factor": "50",
+    "seam_slope_type": "external",
+    "scarf_joint_speed": "50%",
+    "seam_slope_min_length": "20",
     "compatible_printers": [
         "Cubicon xCeler-GX400 0.4 nozzle"
     ]
