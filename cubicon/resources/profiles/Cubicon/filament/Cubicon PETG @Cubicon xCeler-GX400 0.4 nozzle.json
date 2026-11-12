@@ -1,0 +1,14 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon PETG @Cubicon xCeler-GX400 0.4 nozzle",
+    "compatible_printers": [
+        "Cubicon xCeler-GX400 0.4 nozzle"
+    ],
+    "inherits": "Cubicon PETG @base",
+    "chamber_temperature": [
+        "0"
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "type": "filament",
+    "instantiation": "true",
+    "version": "1.0.0.0",
+    "from": "system",
+    "name": "Cubicon PA-CF @Cubicon xCeler-GX400 0.4 nozzle",
+    "compatible_printers": [
+        "Cubicon xCeler-GX400 0.4 nozzle"
+    ],
+    "inherits": "Cubicon PA-CF @base",
+    "chamber_temperature": [
+        "60"
+    ]
+}

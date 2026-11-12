@@ -1,6 +1,6 @@
 {
     "name": "Cubicon",
-    "version": "02.03.15.00",
+    "version": "02.03.16.00",
     "force_update": "0",
     "description": "Cubicon configurations",
     "machine_model_list": [
@@ -151,6 +151,38 @@
         {
             "name": "Cubicon PLAi21 @Cubicon xCeler-GX400 0.4 nozzle",
             "sub_path": "filament/Cubicon PLAi21 @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PLA @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon PLA @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PLA+ @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon PLA+ @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PETG @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon PETG @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon ABS @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon ABS @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon ABS-A100 @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon ABS-A100 @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon ABSk @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon ABSk @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PC @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon PC @Cubicon xCeler-GX400 0.4 nozzle.json"
+        },
+        {
+            "name": "Cubicon PA-CF @Cubicon xCeler-GX400 0.4 nozzle",
+            "sub_path": "filament/Cubicon PA-CF @Cubicon xCeler-GX400 0.4 nozzle.json"
         },
         {
             "name": "Cubicon PLAi21 @Cubicon xCeler-Mini 0.4 nozzle",
